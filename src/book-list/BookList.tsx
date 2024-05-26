@@ -20,7 +20,8 @@ import AddBoxIcon from '@mui/icons-material/AddBox';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
 import './BookList.css';
-import MenuBar from '../menu-bar/MenuBar';
+import MenuBar from '../menu-bar/MenuBarUser';
+import ImportContactsIcon from '@mui/icons-material/ImportContacts';
 
 interface Data {
   id: number;
@@ -202,14 +203,7 @@ interface EnhancedTableProps {
 }
 
 function EnhancedTableHead(props: EnhancedTableProps) {
-  const {
-    onSelectAllClick,
-    order,
-    orderBy,
-    numSelected,
-    rowCount,
-    onRequestSort,
-  } = props;
+  const { order, orderBy, onRequestSort } = props;
   const createSortHandler =
     (property: keyof Data) => (event: React.MouseEvent<unknown>) => {
       onRequestSort(event, property);
@@ -272,7 +266,7 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
           variant="subtitle1"
           component="div"
         >
-          {numSelected} selected
+          // ew napis na pasku
         </Typography>
       ) : (
         <Typography
@@ -285,11 +279,18 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
         </Typography>
       )}
       {numSelected > 0 ? (
-        <Tooltip title="Borrow">
-          <IconButton>
-            <AddBoxIcon />
-          </IconButton>
-        </Tooltip>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Tooltip title="More information">
+            <IconButton>
+              <ImportContactsIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Borrow">
+            <IconButton>
+              <AddBoxIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
       ) : (
         <Tooltip title="Filter list">
           <IconButton>
@@ -331,17 +332,11 @@ export default function BookList() {
     let newSelected: readonly number[] = [];
 
     if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, id);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1),
-      );
+      newSelected = [id];
+    } else {
+      newSelected = [];
     }
+
     setSelected(newSelected);
   };
 
