@@ -4,8 +4,11 @@ import LockOpenIcon from '@mui/icons-material/Login';
 import { Formik } from 'formik';
 import React, { useCallback, useMemo } from 'react';
 import * as yup from 'yup';
+import { useNavigate } from 'react-router-dom';
 
 function LoginForm() {
+  const navigate = useNavigate();
+
   let onSubmit = useCallback(
     (values: { username: string; password: string }, formik: any) => {
       console.log(values);
@@ -67,6 +70,7 @@ function LoginForm() {
             type="submit"
             form="loginForm"
             disabled={!(formik.isValid && formik.dirty)}
+            onClick={() => navigate('/home')}
           >
             Login
           </Button>

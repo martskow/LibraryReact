@@ -13,11 +13,13 @@ import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
 import Tooltip from '@mui/material/Tooltip';
 import { FormControl } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 const pages = ['Library', 'Blog', 'About us'];
 const settings = ['Profile', 'Account', 'Settings', 'Logout'];
 
 function ResponsiveAppBar() {
+  const navigate = useNavigate();
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
     null,
   );
@@ -49,6 +51,19 @@ function ResponsiveAppBar() {
     setLibraryMenuOpen(false);
   };
 
+  const handleUserMenuItemClick = (setting: string) => {
+    handleCloseUserMenu();
+    if (setting === 'Logout') {
+      navigate('/startPage');
+    } else if (setting === 'Profile') {
+      navigate('/profile');
+    } else if (setting === 'Account') {
+      navigate('/account');
+    } else if (setting === 'Settings') {
+      navigate('/settings');
+    }
+  };
+
   return (
     <AppBar position="static">
       <Container maxWidth="xl">
@@ -65,40 +80,53 @@ function ResponsiveAppBar() {
             </IconButton>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-            {pages.map((page) =>
-              page === 'Library' ? (
-                <FormControl key={page}>
-                  <Button variant="outlined" onClick={handleLibraryMenuOpen}>
+            {pages.map((page) => (
+              <Box key={page}>
+                {page === 'Library' ? (
+                  <FormControl>
+                    <Button
+                      sx={{
+                        my: 2,
+                        color: 'white',
+                        display: { xs: 'none', md: 'block' },
+                      }}
+                      onClick={handleOpenNavMenu}
+                    >
+                      {page}
+                    </Button>
+                    <Menu
+                      id="library-menu"
+                      anchorEl={anchorElNav}
+                      keepMounted
+                      open={Boolean(anchorElNav)}
+                      onClose={handleCloseNavMenu}
+                    >
+                      <MenuItem onClick={() => navigate('/borrow')}>
+                        Borrow
+                      </MenuItem>
+                      <MenuItem onClick={() => navigate('/booksList')}>
+                        Books
+                      </MenuItem>
+                      <MenuItem onClick={() => navigate('/reviews')}>
+                        Reviews
+                      </MenuItem>
+                    </Menu>
+                  </FormControl>
+                ) : (
+                  <Button
+                    key={page}
+                    onClick={handleCloseNavMenu}
+                    sx={{
+                      my: 2,
+                      color: 'white',
+                      display: { xs: 'none', md: 'block' },
+                    }}
+                  >
                     {page}
                   </Button>
-                  <Menu
-                    id="library-menu"
-                    anchorEl={anchorElNav}
-                    keepMounted
-                    open={libraryMenuOpen}
-                    onClose={handleLibraryMenuClose}
-                  >
-                    <MenuItem onClick={handleLibraryMenuClose}>Rent</MenuItem>
-                    <MenuItem onClick={handleLibraryMenuClose}>Books</MenuItem>
-                    <MenuItem onClick={handleLibraryMenuClose}>
-                      Reviews
-                    </MenuItem>
-                  </Menu>
-                </FormControl>
-              ) : (
-                <Button
-                  key={page}
-                  onClick={handleCloseNavMenu}
-                  sx={{
-                    my: 2,
-                    color: 'white',
-                    display: { xs: 'none', md: 'block' },
-                  }}
-                >
-                  {page}
-                </Button>
-              ),
-            )}
+                )}
+              </Box>
+            ))}
           </Box>
           <Box>
             <Tooltip title="Open settings">
@@ -122,7 +150,10 @@ function ResponsiveAppBar() {
               onClose={handleCloseUserMenu}
             >
               {settings.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
+                <MenuItem
+                  key={setting}
+                  onClick={() => handleUserMenuItemClick(setting)}
+                >
                   <Typography textAlign="center">{setting}</Typography>
                 </MenuItem>
               ))}

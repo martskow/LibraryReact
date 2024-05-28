@@ -1,0 +1,43 @@
+.image-banner {
+    width: 100%;
+    height: 200px; /* Możesz dostosować wysokość do swoich potrzeb */
+    object-fit: cover;
+}
+
+.content {
+    padding: 50px;
+    font-weight: bold;
+}
+
+h2 {
+    margin: 20px 0;
+}
+
+
+.table-section {
+    margin-bottom: 40px;
+}
+
+.table-container {
+    margin-bottom: 20px;
+}
+
+.main-content {
+    display: flex;
+}
+
+.left-section {
+    flex: 1;
+    margin-right: -10%;
+}
+
+.right-section {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    margin-left: 20%;
+}
+
+.table-section {
+    margin-bottom: 20px;
+}
