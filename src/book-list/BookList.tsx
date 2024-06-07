@@ -22,6 +22,9 @@ import { visuallyHidden } from '@mui/utils';
 import './BookList.css';
 import MenuBar from '../menu-bar/MenuBarUser';
 import ImportContactsIcon from '@mui/icons-material/ImportContacts';
+import { ClientResponse, LibraryClient } from '../api/library-client';
+import { BookResponseDto } from '../api/dto/book.dto';
+import { useEffect, useState } from 'react';
 
 interface Data {
   id: number;
@@ -32,93 +35,6 @@ interface Data {
   publishYear: string;
   availableCopies: number;
 }
-
-function createData(
-  id: number,
-  title: string,
-  author: string,
-  isbn: string,
-  publisher: string,
-  publishYear: string,
-  availableCopies: number,
-): Data {
-  return { id, title, author, isbn, publisher, publishYear, availableCopies };
-}
-
-const rows = [
-  createData(
-    1,
-    "Harry Potter and the Sorcerer's Stone",
-    'J.K. Rowling',
-    '9780606323451',
-    'Turtleback Books',
-    '2013',
-    13,
-  ),
-  createData(
-    2,
-    'Fablehaven: Rise of the Evening Star',
-    'Brandon Mull',
-    '9781590387429',
-    'Shadow Mountain',
-    '2007',
-    8,
-  ),
-  createData(
-    3,
-    'The Lord of The Rings',
-    'J.R.R Tolkien',
-    '9780261103689',
-    'HarperCollins Publishers',
-    '2001',
-    27,
-  ),
-  createData(
-    4,
-    'To Kill a Mockingbird',
-    'Harper Lee',
-    '9780061120084',
-    'J.B. Lippincott & Co.',
-    '1960',
-    15,
-  ),
-  createData(
-    5,
-    '1984',
-    'George Orwell',
-    '9780451524935',
-    'Secker & Warburg',
-    '1949',
-    20,
-  ),
-  createData(
-    6,
-    'The Great Gatsby',
-    'F. Scott Fitzgerald',
-    '9780141182636',
-    "Charles Scribner's Sons",
-    '1925',
-    10,
-  ),
-  createData(
-    7,
-    'The Catcher in the Rye',
-    'J.D. Salinger',
-    '9780316769488',
-    'Little, Brown and Company',
-    '1951',
-    12,
-  ),
-  createData(
-    8,
-    'Pride and Prejudice',
-    'Jane Austen',
-    '9780141439518',
-    'T. Egerton, Whitehall',
-    '1813',
-    18,
-  ),
-];
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -196,7 +112,6 @@ interface EnhancedTableProps {
     event: React.MouseEvent<unknown>,
     property: keyof Data,
   ) => void;
-  onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void;
   order: Order;
   orderBy: string;
   rowCount: number;
@@ -205,8 +120,8 @@ interface EnhancedTableProps {
 function EnhancedTableHead(props: EnhancedTableProps) {
   const { order, orderBy, onRequestSort } = props;
   const createSortHandler =
-    (property: keyof Data) => (event: React.MouseEvent<unknown>) => {
-      onRequestSort(event, property);
+    (property: string) => (event: React.MouseEvent<unknown>) => {
+      onRequestSort(event, property as keyof Data);
     };
 
   return (
@@ -301,13 +216,29 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
     </Toolbar>
   );
 }
-export default function BookList() {
+const BookList = () => {
   const [order, setOrder] = React.useState<Order>('asc');
   const [orderBy, setOrderBy] = React.useState<keyof Data>('author');
   const [selected, setSelected] = React.useState<readonly number[]>([]);
   const [page, setPage] = React.useState(0);
   const [dense, setDense] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [books, setBooks] = useState<BookResponseDto[]>([]);
+
+  useEffect(() => {
+    const libraryClient = new LibraryClient();
+    const fetchBooks = async () => {
+      const response = await libraryClient.getBooks();
+      if (response.success && response.data) {
+        setBooks(response.data);
+        console.log(response.data);
+      } else {
+        console.error('Failed to fetch books');
+      }
+    };
+
+    fetchBooks();
+  }, []);
 
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
@@ -318,14 +249,14 @@ export default function BookList() {
     setOrderBy(property);
   };
 
-  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
+  /*const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
-      const newSelected = rows.map((n) => n.id);
+      const newSelected = books.map((n) => n.id);
       setSelected(newSelected);
       return;
     }
     setSelected([]);
-  };
+  };*/
 
   const handleClick = (event: React.MouseEvent<unknown>, id: number) => {
     const selectedIndex = selected.indexOf(id);
@@ -359,16 +290,24 @@ export default function BookList() {
 
   // Avoid a layout jump when reaching the last page with empty rows.
   const emptyRows =
-    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
+    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - books.length) : 0;
 
-  const visibleRows = React.useMemo(
-    () =>
-      stableSort(rows, getComparator(order, orderBy)).slice(
-        page * rowsPerPage,
-        page * rowsPerPage + rowsPerPage,
-      ),
-    [order, orderBy, page, rowsPerPage],
-  );
+  const visibleRows = React.useMemo(() => {
+    const formattedBooks = books.map((book) => ({
+      id: book.id || 0,
+      title: book.title || '',
+      author: book.author || '',
+      isbn: book.isbn || '',
+      publisher: book.publisher || '',
+      publishYear: book.publishYear || '',
+      availableCopies: book.availableCopies || 0,
+    }));
+
+    return stableSort(formattedBooks, getComparator(order, orderBy)).slice(
+      page * rowsPerPage,
+      page * rowsPerPage + rowsPerPage,
+    );
+  }, [books, order, orderBy, page, rowsPerPage]);
 
   return (
     <div>
@@ -382,14 +321,15 @@ export default function BookList() {
               aria-labelledby="tableTitle"
               size={dense ? 'small' : 'medium'}
             >
-              <EnhancedTableHead
-                numSelected={selected.length}
-                order={order}
-                orderBy={orderBy}
-                onSelectAllClick={handleSelectAllClick}
-                onRequestSort={handleRequestSort}
-                rowCount={rows.length}
-              />
+              {
+                <EnhancedTableHead
+                  numSelected={selected.length}
+                  order={order}
+                  orderBy={orderBy}
+                  onRequestSort={handleRequestSort}
+                  rowCount={books.length}
+                />
+              }
               <TableBody>
                 {visibleRows.map((row, index) => {
                   const isItemSelected = isSelected(row.id);
@@ -439,7 +379,7 @@ export default function BookList() {
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={rows.length}
+            count={books.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
@@ -453,4 +393,5 @@ export default function BookList() {
       </Box>
     </div>
   );
-}
+};
+export default BookList;

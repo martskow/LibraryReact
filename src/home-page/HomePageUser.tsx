@@ -9,6 +9,7 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
 import './HomePage.css';
+import { useApi } from '../api/ApiProvider';
 
 // Mock data
 const user = 'John Doe';
@@ -32,6 +33,12 @@ const statistics = [
 ];
 
 function HomePageUser() {
+  const apiClient = useApi();
+
+  apiClient.getBooks().then((response) => {
+    console.log(response);
+  });
+
   return (
     <div>
       <MenuBar />
