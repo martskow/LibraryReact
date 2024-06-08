@@ -14,11 +14,14 @@ import MenuItem from '@mui/material/MenuItem';
 import InputBase from '@mui/material/InputBase';
 import SearchIcon from '@mui/icons-material/Search';
 import Tooltip from '@mui/material/Tooltip';
+import { FormControl } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 const pages = ['Library', 'Blog', 'About us'];
 const settings = ['Profile', 'Account', 'Settings', 'Logout'];
 
 function ResponsiveAppBar() {
+  const navigate = useNavigate();
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
     null,
   );
@@ -41,37 +44,24 @@ function ResponsiveAppBar() {
     setAnchorElUser(null);
   };
 
-  const Search = styled('div')(({ theme }) => ({
-    position: 'relative',
-    borderRadius: theme.shape.borderRadius,
-    backgroundColor: alpha(theme.palette.common.white, 0.15),
-    '&:hover': {
-      backgroundColor: alpha(theme.palette.common.white, 0.25),
-    },
-    marginLeft: 0,
-    width: '100%',
-    [theme.breakpoints.up('sm')]: {
-      marginLeft: theme.spacing(1),
-      width: 'auto',
-    },
-  }));
-
-  const SearchIconWrapper = styled('div')(({ theme }) => ({
-    padding: theme.spacing(0, 2),
-    height: '100%',
-    position: 'absolute',
-    pointerEvents: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  }));
+  const handleUserMenuItemClick = (setting: string) => {
+    handleCloseUserMenu();
+    if (setting === 'Logout') {
+      navigate('/startPage');
+    } else if (setting === 'Profile') {
+      navigate('/profile');
+    } else if (setting === 'Account') {
+      navigate('/account');
+    } else if (setting === 'Settings') {
+      navigate('/settings');
+    }
+  };
 
   const StyledInputBase = styled(InputBase)(({ theme }) => ({
     color: 'inherit',
     width: '100%',
     '& .MuiInputBase-input': {
       padding: theme.spacing(1, 1, 1, 0),
-      // vertical padding + font size from searchIcon
       paddingLeft: `calc(1em + ${theme.spacing(4)})`,
       transition: theme.transitions.create('width'),
       [theme.breakpoints.up('sm')]: {
@@ -94,23 +84,58 @@ function ResponsiveAppBar() {
               color="inherit"
               aria-label="open drawer"
               sx={{ mr: 2 }}
+              onClick={() => navigate('/homeAdmin')}
             >
               <HomeIcon />
             </IconButton>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
             {pages.map((page) => (
-              <Button
-                key={page}
-                onClick={handleCloseNavMenu}
-                sx={{
-                  my: 2,
-                  color: 'white',
-                  display: { xs: 'none', md: 'block' },
-                }}
-              >
-                {page}
-              </Button>
+              <Box key={page}>
+                {page === 'Library' ? (
+                  <FormControl>
+                    <Button
+                      sx={{
+                        my: 2,
+                        color: 'white',
+                        display: { xs: 'none', md: 'block' },
+                      }}
+                      onClick={handleOpenNavMenu}
+                    >
+                      {page}
+                    </Button>
+                    <Menu
+                      id="library-menu"
+                      anchorEl={anchorElNav}
+                      keepMounted
+                      open={Boolean(anchorElNav)}
+                      onClose={handleCloseNavMenu}
+                    >
+                      <MenuItem onClick={() => navigate('/loans')}>
+                        Loans
+                      </MenuItem>
+                      <MenuItem onClick={() => navigate('/booksList')}>
+                        Books
+                      </MenuItem>
+                      <MenuItem onClick={() => navigate('/users')}>
+                        Users
+                      </MenuItem>
+                    </Menu>
+                  </FormControl>
+                ) : (
+                  <Button
+                    key={page}
+                    onClick={handleCloseNavMenu}
+                    sx={{
+                      my: 2,
+                      color: 'white',
+                      display: { xs: 'none', md: 'block' },
+                    }}
+                  >
+                    {page}
+                  </Button>
+                )}
+              </Box>
             ))}
           </Box>
           <Box>
@@ -135,7 +160,10 @@ function ResponsiveAppBar() {
               onClose={handleCloseUserMenu}
             >
               {settings.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
+                <MenuItem
+                  key={setting}
+                  onClick={() => handleUserMenuItemClick(setting)}
+                >
                   <Typography textAlign="center">{setting}</Typography>
                 </MenuItem>
               ))}
@@ -146,4 +174,5 @@ function ResponsiveAppBar() {
     </AppBar>
   );
 }
+
 export default ResponsiveAppBar;

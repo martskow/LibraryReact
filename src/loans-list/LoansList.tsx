@@ -22,32 +22,20 @@ import { visuallyHidden } from '@mui/utils';
 import './LoansList.css';
 import MenuBar from '../menu-bar/MenuBarLibrarian';
 import ImportContactsIcon from '@mui/icons-material/ImportContacts';
+import { useEffect, useState } from 'react';
+import { BookResponseDto } from '../api/dto/book.dto';
+import { LibraryClient } from '../api/library-client';
+import { LoanResponseDto } from '../api/dto/loan.dto';
+import { UserResponseDto } from '../api/dto/user.dto';
 
 interface Data {
   id: number;
-  userId: number;
-  bookId: number;
+  userName: string;
+  title: string;
+  isbn: string;
   loanDate: string;
   dueDate: string;
 }
-
-function createData(
-  id: number,
-  userId: number,
-  bookId: number,
-  loanDate: string,
-  dueDate: string,
-): Data {
-  return { id, userId, bookId, loanDate, dueDate };
-}
-
-const rows = [
-  createData(1, 1, 1, '12-05-2024', '12-06-2024'),
-  createData(2, 1, 3, '17-05-2024', '17-06-2024'),
-  createData(3, 4, 8, '17-05-2024', '17-06-2024'),
-  createData(4, 12, 11, '19-05-2024', '19-06-2024'),
-  createData(5, 10, 1, '21-05-2024', '21-06-2024'),
-];
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -97,8 +85,9 @@ interface HeadCell {
 
 const headCells: readonly HeadCell[] = [
   { id: 'id', numeric: true, disablePadding: true, label: 'Loan ID' },
-  { id: 'userId', numeric: true, disablePadding: false, label: 'User ID' },
-  { id: 'bookId', numeric: true, disablePadding: false, label: 'Book ID' },
+  { id: 'userName', numeric: false, disablePadding: false, label: 'Username' },
+  { id: 'title', numeric: false, disablePadding: false, label: 'Title' },
+  { id: 'isbn', numeric: false, disablePadding: false, label: 'Isbn' },
   {
     id: 'loanDate',
     numeric: false,
@@ -119,7 +108,6 @@ interface EnhancedTableProps {
     event: React.MouseEvent<unknown>,
     property: keyof Data,
   ) => void;
-  onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void;
   order: Order;
   orderBy: string;
   rowCount: number;
@@ -224,13 +212,29 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
     </Toolbar>
   );
 }
-export default function LoanList() {
+const LoansList = () => {
   const [order, setOrder] = React.useState<Order>('asc');
-  const [orderBy, setOrderBy] = React.useState<keyof Data>('id');
+  const [orderBy, setOrderBy] = React.useState<keyof Data>('userName');
   const [selected, setSelected] = React.useState<readonly number[]>([]);
   const [page, setPage] = React.useState(0);
   const [dense, setDense] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [loans, setLoans] = useState<LoanResponseDto[]>([]);
+
+  useEffect(() => {
+    const libraryClient = new LibraryClient();
+    const fetchLoans = async () => {
+      const response = await libraryClient.getLoans();
+      if (response.success && response.data) {
+        setLoans(response.data);
+        console.log(response.data);
+      } else {
+        console.error('Failed to fetch books');
+      }
+    };
+
+    fetchLoans();
+  }, []);
 
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
@@ -239,15 +243,6 @@ export default function LoanList() {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
     setOrderBy(property);
-  };
-
-  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.checked) {
-      const newSelected = rows.map((n) => n.id);
-      setSelected(newSelected);
-      return;
-    }
-    setSelected([]);
   };
 
   const handleClick = (event: React.MouseEvent<unknown>, id: number) => {
@@ -280,18 +275,22 @@ export default function LoanList() {
 
   const isSelected = (id: number) => selected.indexOf(id) !== -1;
 
-  // Avoid a layout jump when reaching the last page with empty rows.
   const emptyRows =
-    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
+    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - loans.length) : 0;
 
-  const visibleRows = React.useMemo(
-    () =>
-      stableSort(rows, getComparator(order, orderBy)).slice(
-        page * rowsPerPage,
-        page * rowsPerPage + rowsPerPage,
-      ),
-    [order, orderBy, page, rowsPerPage],
-  );
+  const visibleRows = React.useMemo(() => {
+    return stableSort(
+      loans.map((loan) => ({
+        id: loan.loanId || 0,
+        userName: loan.user?.userName || '',
+        title: loan.book?.title || '',
+        isbn: loan.book?.isbn || '',
+        loanDate: loan.loanDate || '',
+        dueDate: loan.dueDate || '',
+      })),
+      getComparator(order, orderBy),
+    ).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  }, [loans, order, orderBy, page, rowsPerPage]);
 
   return (
     <div>
@@ -309,9 +308,8 @@ export default function LoanList() {
                 numSelected={selected.length}
                 order={order}
                 orderBy={orderBy}
-                onSelectAllClick={handleSelectAllClick}
                 onRequestSort={handleRequestSort}
-                rowCount={rows.length}
+                rowCount={loans.length}
               />
               <TableBody>
                 {visibleRows.map((row, index) => {
@@ -338,8 +336,10 @@ export default function LoanList() {
                       >
                         {row.id}
                       </TableCell>
-                      <TableCell align="center">{row.userId}</TableCell>
-                      <TableCell align="center">{row.bookId}</TableCell>
+                      <TableCell align="center">{row.id}</TableCell>
+                      <TableCell align="center">{row.userName}</TableCell>
+                      <TableCell align="center">{row.title}</TableCell>
+                      <TableCell align="center">{row.isbn}</TableCell>
                       <TableCell align="center">{row.loanDate}</TableCell>
                       <TableCell align="center">{row.dueDate}</TableCell>
                     </TableRow>
@@ -360,7 +360,7 @@ export default function LoanList() {
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={rows.length}
+            count={loans.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
@@ -374,4 +374,5 @@ export default function LoanList() {
       </Box>
     </div>
   );
-}
+};
+export default LoansList;
