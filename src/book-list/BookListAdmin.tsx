@@ -20,16 +20,13 @@ import AddBoxIcon from '@mui/icons-material/AddBox';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
 import './BookList.css';
-import MenuBar from '../menu-bar/MenuBarUser';
+import MenuBar from '../menu-bar/MenuBarLibrarian';
 import ImportContactsIcon from '@mui/icons-material/ImportContacts';
 import { ClientResponse, LibraryClient } from '../api/library-client';
 import { BookResponseDto } from '../api/dto/book.dto';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import { QueueDto } from '../api/dto/queue.dto';
-import { toast, ToastContainer } from 'react-toastify';
-import { Alert, Snackbar } from '@mui/material';
 
 interface Data {
   id: number;
@@ -122,61 +119,12 @@ interface EnhancedTableProps {
   rowCount: number;
 }
 
-const libraryClient = new LibraryClient();
-
-interface AlertProps {
-  message: string;
-  severity: 'success' | 'error';
-}
-
-const handleAddToQueue = async (
-  selectedBookId: number,
-  setAlert: React.Dispatch<React.SetStateAction<AlertProps | null>>,
-) => {
-  if (!selectedBookId) {
-    return;
-  }
-
-  try {
-    const response = await libraryClient.addToQueue(selectedBookId);
-    if (response.success) {
-      console.log('Book added to queue successfully');
-      setAlert({
-        message: 'Book added to queue successfully',
-        severity: 'success',
-      });
-    } else {
-      console.error('Failed to add book to queue', response.statusCode);
-      setAlert({
-        message: `Failed to add book to queue: ${response.statusCode}`,
-        severity: 'error',
-      });
-    }
-  } catch (error) {
-    console.error('Error adding book to queue', error);
-    setAlert({
-      message: `Failed to add book to queue`,
-      severity: 'error',
-    });
-  }
-};
-
 function EnhancedTableHead(props: EnhancedTableProps) {
   const { order, orderBy, onRequestSort } = props;
-  const [alert, setAlert] = useState<AlertProps | null>(null);
   const createSortHandler =
     (property: string) => (event: React.MouseEvent<unknown>) => {
       onRequestSort(event, property as keyof Data);
     };
-
-  useEffect(() => {
-    if (alert) {
-      const timer = setTimeout(() => {
-        setAlert(null);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [alert]);
 
   return (
     <TableHead>
@@ -209,12 +157,10 @@ function EnhancedTableHead(props: EnhancedTableProps) {
 
 interface EnhancedTableToolbarProps {
   numSelected: number;
-  selected: readonly number[];
 }
 
 function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
-  const { numSelected, selected } = props;
-  const [alert, setAlert] = useState<AlertProps | null>(null);
+  const { numSelected } = props;
 
   return (
     <Toolbar
@@ -256,23 +202,11 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
               <ImportContactsIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Add to queue">
-            <IconButton onClick={() => handleAddToQueue(selected[0], setAlert)}>
+          <Tooltip title="Borrow">
+            <IconButton>
               <AddBoxIcon />
             </IconButton>
           </Tooltip>
-          {alert && (
-            <Snackbar
-              open={!!alert}
-              anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-              autoHideDuration={3000}
-              onClose={() => setAlert(null)}
-            >
-              <Alert severity={alert.severity} onClose={() => setAlert(null)}>
-                {alert.message}
-              </Alert>
-            </Snackbar>
-          )}
         </Box>
       ) : (
         <Tooltip title="Filter list">
@@ -284,7 +218,6 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
     </Toolbar>
   );
 }
-
 const BookList = () => {
   const navigate = useNavigate();
   const [order, setOrder] = React.useState<Order>('asc');
@@ -391,13 +324,9 @@ const BookList = () => {
   return (
     <div>
       <MenuBar />
-      <ToastContainer />
       <Box sx={{ width: '100%' }}>
         <Paper sx={{ width: '100%', mb: 2 }}>
-          <EnhancedTableToolbar
-            numSelected={selected.length}
-            selected={selected}
-          />
+          <EnhancedTableToolbar numSelected={selected.length} />
           <TableContainer className="Book-list">
             <Table
               sx={{ minWidth: 750 }}
@@ -477,5 +406,4 @@ const BookList = () => {
     </div>
   );
 };
-
 export default BookList;

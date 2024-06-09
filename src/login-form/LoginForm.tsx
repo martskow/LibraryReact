@@ -7,22 +7,46 @@ import * as yup from 'yup';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { useApi } from '../api/ApiProvider';
+import { ClientResponse, LibraryClient } from '../api/library-client';
 
 function LoginForm() {
   const navigate = useNavigate();
   const apiClient = useApi();
+  const libraryClient = new LibraryClient();
 
   const onSubmit = useCallback(
-    (values: { login: string; password: string }, formik: any) => {
-      apiClient.login(values).then((response) => {
+    async (values: { login: string; password: string }, formik: any) => {
+      try {
+        const response = await apiClient.login(values);
         console.log(response);
+
         if (response.statusCode === 200 && response.data) {
           Cookies.set('token', response.data);
-          navigate('/home');
+          const userRoleResponse = await libraryClient.getUserRole();
+          const loansResponse = await libraryClient.getUserLoans();
+
+          if (userRoleResponse.statusCode === 200 && userRoleResponse.data) {
+            console.log(userRoleResponse.data);
+
+            const role = userRoleResponse.data;
+
+            if (role === 'ROLE_USER') {
+              navigate('/home');
+            } else if (role === 'ROLE_ADMIN') {
+              navigate('/homeAdmin');
+            } else if (role === 'ROLE_LIBRARIAN') {
+              navigate('/homeLibrarian');
+            }
+          } else {
+            formik.setFieldError('login', 'Failed to get user information');
+          }
         } else {
           formik.setFieldError('login', 'Invalid username or password');
         }
-      });
+      } catch (error) {
+        console.error('Login failed', error);
+        formik.setFieldError('login', 'Login failed due to unexpected error');
+      }
     },
     [apiClient, navigate],
   );

@@ -27,6 +27,11 @@ import { BookResponseDto } from '../api/dto/book.dto';
 import { LibraryClient } from '../api/library-client';
 import { LoanResponseDto } from '../api/dto/loan.dto';
 import { UserResponseDto } from '../api/dto/user.dto';
+import { useApi } from '../api/ApiProvider';
+import MoreTimeIcon from '@mui/icons-material/MoreTime';
+import { Alert, Snackbar } from '@mui/material';
+import RemoveIcon from '@mui/icons-material/Remove';
+import { useNavigate } from 'react-router-dom';
 
 interface Data {
   id: number;
@@ -113,8 +118,79 @@ interface EnhancedTableProps {
   rowCount: number;
 }
 
+const libraryClient = new LibraryClient();
+
+interface AlertProps {
+  message: string;
+  severity: 'success' | 'error';
+}
+
+const handleExtendLoan = async (
+  selectedLoanId: number,
+  setAlert: React.Dispatch<React.SetStateAction<AlertProps | null>>,
+) => {
+  if (!selectedLoanId) {
+    return;
+  }
+  try {
+    const response = await libraryClient.extendLoan(selectedLoanId);
+    if (response.success) {
+      console.log('Loan due date extended successfully');
+      setAlert({
+        message: 'Loan due date extended successfully',
+        severity: 'success',
+      });
+    } else {
+      console.error('Failed to extend loan due date', response.statusCode);
+      setAlert({
+        message: `Failed to extend loan due date: ${response.statusCode}`,
+        severity: 'error',
+      });
+    }
+  } catch (error) {
+    console.error('Error extending loan due date', error);
+    setAlert({
+      message: `Error extending loan due date`,
+      severity: 'error',
+    });
+  }
+};
+
+const handleReturnLoan = async (
+  selectedLoanId: number,
+  setAlert: React.Dispatch<React.SetStateAction<AlertProps | null>>,
+) => {
+  if (!selectedLoanId) {
+    return;
+  }
+
+  try {
+    const response = await libraryClient.returnLoan(selectedLoanId);
+    if (response.success) {
+      console.log('Loan has been returned successfully');
+      setAlert({
+        message: 'Loan has been returned successfully',
+        severity: 'success',
+      });
+    } else {
+      console.error('Failed to return loan', response.statusCode);
+      setAlert({
+        message: `Failed to return loan: ${response.statusCode}`,
+        severity: 'error',
+      });
+    }
+  } catch (error) {
+    console.error('Error returning loan', error);
+    setAlert({
+      message: `Error returning loan`,
+      severity: 'error',
+    });
+  }
+};
+
 function EnhancedTableHead(props: EnhancedTableProps) {
   const { order, orderBy, onRequestSort } = props;
+  const [alert, setAlert] = useState<AlertProps | null>(null);
   const createSortHandler =
     (property: keyof Data) => (event: React.MouseEvent<unknown>) => {
       onRequestSort(event, property);
@@ -151,10 +227,12 @@ function EnhancedTableHead(props: EnhancedTableProps) {
 
 interface EnhancedTableToolbarProps {
   numSelected: number;
+  selected: readonly number[];
 }
 
 function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
-  const { numSelected } = props;
+  const { numSelected, selected } = props;
+  const [alert, setAlert] = useState<AlertProps | null>(null);
 
   return (
     <Toolbar
@@ -191,16 +269,40 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
       )}
       {numSelected > 0 ? (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Tooltip title="More information">
-            <IconButton>
-              <ImportContactsIcon />
+          <Tooltip title="Extend Loan">
+            <IconButton onClick={() => handleExtendLoan(selected[0], setAlert)}>
+              <MoreTimeIcon />
             </IconButton>
           </Tooltip>
+          {alert && (
+            <Snackbar
+              open={!!alert}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+              autoHideDuration={3000}
+              onClose={() => setAlert(null)}
+            >
+              <Alert severity={alert.severity} onClose={() => setAlert(null)}>
+                {alert.message}
+              </Alert>
+            </Snackbar>
+          )}
           <Tooltip title="Return">
-            <IconButton>
-              <AddBoxIcon />
+            <IconButton onClick={() => handleReturnLoan(selected[0], setAlert)}>
+              <RemoveIcon />
             </IconButton>
           </Tooltip>
+          {alert && (
+            <Snackbar
+              open={!!alert}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+              autoHideDuration={3000}
+              onClose={() => setAlert(null)}
+            >
+              <Alert severity={alert.severity} onClose={() => setAlert(null)}>
+                {alert.message}
+              </Alert>
+            </Snackbar>
+          )}
         </Box>
       ) : (
         <Tooltip title="Filter list">
@@ -214,12 +316,13 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
 }
 const LoansList = () => {
   const [order, setOrder] = React.useState<Order>('asc');
-  const [orderBy, setOrderBy] = React.useState<keyof Data>('userName');
+  const [orderBy, setOrderBy] = React.useState<keyof Data>('id');
   const [selected, setSelected] = React.useState<readonly number[]>([]);
   const [page, setPage] = React.useState(0);
   const [dense, setDense] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [loans, setLoans] = useState<LoanResponseDto[]>([]);
+  const apiClient = useApi();
 
   useEffect(() => {
     const libraryClient = new LibraryClient();
@@ -297,7 +400,10 @@ const LoansList = () => {
       <MenuBar />
       <Box sx={{ width: '100%' }}>
         <Paper sx={{ width: '100%', mb: 2 }}>
-          <EnhancedTableToolbar numSelected={selected.length} />
+          <EnhancedTableToolbar
+            numSelected={selected.length}
+            selected={selected}
+          />
           <TableContainer className="Loan-list">
             <Table
               sx={{ minWidth: 750 }}
@@ -327,7 +433,7 @@ const LoansList = () => {
                       selected={isItemSelected}
                       sx={{ cursor: 'pointer' }}
                     >
-                      <TableCell
+                      {/*<TableCell
                         component="th"
                         id={labelId}
                         scope="row"
@@ -335,7 +441,7 @@ const LoansList = () => {
                         align="center"
                       >
                         {row.id}
-                      </TableCell>
+                      </TableCell>*/}
                       <TableCell align="center">{row.id}</TableCell>
                       <TableCell align="center">{row.userName}</TableCell>
                       <TableCell align="center">{row.title}</TableCell>

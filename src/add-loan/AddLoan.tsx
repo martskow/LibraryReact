@@ -37,6 +37,10 @@ const AddLoanPage = () => {
     const response = await libraryClient.addLoan(loanData);
     if (response.success) {
       console.log('Loan added successfully:', response.data);
+      setFormData({
+        isbn: '',
+        userName: '',
+      });
     } else {
       console.error('Failed to add loan:', response.statusCode);
     }

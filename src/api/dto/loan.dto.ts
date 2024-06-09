@@ -14,3 +14,11 @@ export class LoanDto {
   user: { userName: string | undefined } | undefined;
   book: { isbn: string | undefined } | undefined;
 }
+
+export class LoanExtendDto {
+  newDueDate: string | undefined;
+
+  constructor(newDueDate: string | undefined) {
+    this.newDueDate = newDueDate;
+  }
+}

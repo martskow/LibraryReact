@@ -13,6 +13,9 @@ import AddUserLibrarian from './add-user/AddUserLibrarian';
 import AddUserAdmin from './add-user/AddUserAdmin';
 import AddLoan from './add-loan/AddLoan';
 import AddBook from './add-book/AddBook';
+import BookListLibrarian from './book-list/BookListLibrarian';
+import BookListAdmin from './book-list/BookListAdmin';
+import ArchiveLoansLibrarian from './archive-loans/ArchiveLoansLibrarian';
 
 function App() {
   return (
@@ -28,10 +31,16 @@ function App() {
           <Route path="/homeLibrarian" element={<HomePageLibrarian />} />
           <Route path="/loans" element={<LoansList />} />
           <Route path="/booksList" element={<BookList />} />
+          <Route path="/booksListLibrarian" element={<BookListLibrarian />} />
+          <Route path="/booksListAdmin" element={<BookListAdmin />} />
           <Route path="/addUserLibrarian" element={<AddUserLibrarian />} />
           <Route path="/addUserAdmin" element={<AddUserAdmin />} />
           <Route path="/addLoan" element={<AddLoan />} />
           <Route path="/addBook" element={<AddBook />} />
+          <Route
+            path="/archiveLoansLibrarian"
+            element={<ArchiveLoansLibrarian />}
+          />
         </Routes>
       </ApiProvider>
     </BrowserRouter>

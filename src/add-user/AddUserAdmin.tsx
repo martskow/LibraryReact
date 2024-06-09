@@ -49,6 +49,14 @@ const AddUserPage = () => {
     const response = await libraryClient.addUser(formData);
     if (response.success) {
       console.log('User added successfully:', response.data);
+      setFormData({
+        userName: '',
+        userPassword: '',
+        role: '',
+        email: '',
+        userFirstName: '',
+        userLastName: '',
+      });
     } else {
       console.error('Failed to add user:', response.statusCode);
     }

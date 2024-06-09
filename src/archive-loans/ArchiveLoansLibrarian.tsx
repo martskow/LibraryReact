@@ -19,8 +19,7 @@ import Switch from '@mui/material/Switch';
 import AddBoxIcon from '@mui/icons-material/AddBox';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
-import './BookList.css';
-import MenuBar from '../menu-bar/MenuBarUser';
+import MenuBar from '../menu-bar/MenuBarLibrarian';
 import ImportContactsIcon from '@mui/icons-material/ImportContacts';
 import { ClientResponse, LibraryClient } from '../api/library-client';
 import { BookResponseDto } from '../api/dto/book.dto';
@@ -30,15 +29,17 @@ import Cookies from 'js-cookie';
 import { QueueDto } from '../api/dto/queue.dto';
 import { toast, ToastContainer } from 'react-toastify';
 import { Alert, Snackbar } from '@mui/material';
+import { LoanResponseDto } from '../api/dto/loan.dto';
+import { LoanArchiveResponseDto } from '../api/dto/archiveLoan.dto';
 
 interface Data {
   id: number;
+  userName: string;
   title: string;
-  author: string;
   isbn: string;
-  publisher: string;
-  publishYear: string;
-  availableCopies: number;
+  loanDate: string;
+  dueDate: string;
+  returnDate: string;
 }
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
@@ -88,26 +89,27 @@ interface HeadCell {
 }
 
 const headCells: readonly HeadCell[] = [
-  { id: 'title', numeric: false, disablePadding: true, label: 'Title' },
-  { id: 'author', numeric: false, disablePadding: false, label: 'Author' },
-  { id: 'isbn', numeric: false, disablePadding: false, label: 'ISBN' },
+  { id: 'id', numeric: true, disablePadding: true, label: 'Loan ID' },
+  { id: 'userName', numeric: false, disablePadding: false, label: 'Username' },
+  { id: 'title', numeric: false, disablePadding: false, label: 'Title' },
+  { id: 'isbn', numeric: false, disablePadding: false, label: 'Isbn' },
   {
-    id: 'publisher',
+    id: 'loanDate',
     numeric: false,
     disablePadding: false,
-    label: 'Publisher',
+    label: 'Loan Date',
   },
   {
-    id: 'publishYear',
+    id: 'dueDate',
     numeric: false,
     disablePadding: false,
-    label: 'Publish Year',
+    label: 'Due Date',
   },
   {
-    id: 'availableCopies',
-    numeric: true,
+    id: 'returnDate',
+    numeric: false,
     disablePadding: false,
-    label: 'Available Copies',
+    label: 'Return Date',
   },
 ];
 
@@ -128,38 +130,6 @@ interface AlertProps {
   message: string;
   severity: 'success' | 'error';
 }
-
-const handleAddToQueue = async (
-  selectedBookId: number,
-  setAlert: React.Dispatch<React.SetStateAction<AlertProps | null>>,
-) => {
-  if (!selectedBookId) {
-    return;
-  }
-
-  try {
-    const response = await libraryClient.addToQueue(selectedBookId);
-    if (response.success) {
-      console.log('Book added to queue successfully');
-      setAlert({
-        message: 'Book added to queue successfully',
-        severity: 'success',
-      });
-    } else {
-      console.error('Failed to add book to queue', response.statusCode);
-      setAlert({
-        message: `Failed to add book to queue: ${response.statusCode}`,
-        severity: 'error',
-      });
-    }
-  } catch (error) {
-    console.error('Error adding book to queue', error);
-    setAlert({
-      message: `Failed to add book to queue`,
-      severity: 'error',
-    });
-  }
-};
 
 function EnhancedTableHead(props: EnhancedTableProps) {
   const { order, orderBy, onRequestSort } = props;
@@ -212,98 +182,27 @@ interface EnhancedTableToolbarProps {
   selected: readonly number[];
 }
 
-function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
-  const { numSelected, selected } = props;
-  const [alert, setAlert] = useState<AlertProps | null>(null);
-
-  return (
-    <Toolbar
-      sx={{
-        pl: { sm: 2 },
-        pr: { xs: 1, sm: 1 },
-        ...(numSelected > 0 && {
-          bgcolor: (theme) =>
-            alpha(
-              theme.palette.primary.main,
-              theme.palette.action.activatedOpacity,
-            ),
-        }),
-      }}
-    >
-      {numSelected > 0 ? (
-        <Typography
-          sx={{ flex: '1 1 100%' }}
-          color="inherit"
-          variant="subtitle1"
-          component="div"
-        >
-          // ew napis na pasku
-        </Typography>
-      ) : (
-        <Typography
-          sx={{ flex: '1 1 100%' }}
-          variant="h6"
-          id="tableTitle"
-          component="div"
-        >
-          Book List
-        </Typography>
-      )}
-      {numSelected > 0 ? (
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Tooltip title="More information">
-            <IconButton>
-              <ImportContactsIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Add to queue">
-            <IconButton onClick={() => handleAddToQueue(selected[0], setAlert)}>
-              <AddBoxIcon />
-            </IconButton>
-          </Tooltip>
-          {alert && (
-            <Snackbar
-              open={!!alert}
-              anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-              autoHideDuration={3000}
-              onClose={() => setAlert(null)}
-            >
-              <Alert severity={alert.severity} onClose={() => setAlert(null)}>
-                {alert.message}
-              </Alert>
-            </Snackbar>
-          )}
-        </Box>
-      ) : (
-        <Tooltip title="Filter list">
-          <IconButton>
-            <FilterListIcon />
-          </IconButton>
-        </Tooltip>
-      )}
-    </Toolbar>
-  );
-}
-
-const BookList = () => {
+const ArchiveLoansList = () => {
   const navigate = useNavigate();
   const [order, setOrder] = React.useState<Order>('asc');
-  const [orderBy, setOrderBy] = React.useState<keyof Data>('author');
+  const [orderBy, setOrderBy] = React.useState<keyof Data>('id');
   const [selected, setSelected] = React.useState<readonly number[]>([]);
   const [page, setPage] = React.useState(0);
   const [dense, setDense] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
-  const [books, setBooks] = useState<BookResponseDto[]>([]);
+  const [archiveLoans, setArchiveLoans] = useState<LoanArchiveResponseDto[]>(
+    [],
+  );
 
   useEffect(() => {
     const libraryClient = new LibraryClient();
-    const fetchBooks = async () => {
-      const response = await libraryClient.getBooks();
+    const fetchArchiveLoans = async () => {
+      const response = await libraryClient.getArchiveLoans();
       if (response.success && response.data) {
-        setBooks(response.data);
+        setArchiveLoans(response.data);
         console.log(response.data);
       } else {
-        console.error('Failed to fetch books');
+        console.error('Failed to fetch archival loans');
       }
     };
     const checkUserRole = async () => {
@@ -316,7 +215,7 @@ const BookList = () => {
       const userRoleResponse = await libraryClient.getUserRole();
       if (userRoleResponse.statusCode === 200 && userRoleResponse.data) {
         const role = userRoleResponse.data;
-        if (role !== 'ROLE_USER') {
+        if (role !== 'ROLE_LIBRARIAN') {
           navigate('/login');
         }
       } else {
@@ -324,8 +223,8 @@ const BookList = () => {
       }
     };
 
-    fetchBooks();
     checkUserRole();
+    fetchArchiveLoans();
   }, [navigate]);
 
   const handleRequestSort = (
@@ -369,24 +268,24 @@ const BookList = () => {
 
   // Avoid a layout jump when reaching the last page with empty rows.
   const emptyRows =
-    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - books.length) : 0;
+    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - archiveLoans.length) : 0;
 
   const visibleRows = React.useMemo(() => {
-    const formattedBooks = books.map((book) => ({
-      id: book.id || 0,
-      title: book.title || '',
-      author: book.author || '',
-      isbn: book.isbn || '',
-      publisher: book.publisher || '',
-      publishYear: book.publishYear || '',
-      availableCopies: book.availableCopies || 0,
+    const formattedArchivalLoans = archiveLoans.map((loan) => ({
+      id: loan.loanArchiveId || 0,
+      userName: loan.user?.userName || '',
+      title: loan.book?.title || '',
+      isbn: loan.book?.isbn || '',
+      loanDate: loan.loanDate || '',
+      dueDate: loan.dueDate || '',
+      returnDate: loan.returnDate || '',
     }));
 
-    return stableSort(formattedBooks, getComparator(order, orderBy)).slice(
-      page * rowsPerPage,
-      page * rowsPerPage + rowsPerPage,
-    );
-  }, [books, order, orderBy, page, rowsPerPage]);
+    return stableSort(
+      formattedArchivalLoans,
+      getComparator(order, orderBy),
+    ).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  }, [archiveLoans, order, orderBy, page, rowsPerPage]);
 
   return (
     <div>
@@ -394,10 +293,6 @@ const BookList = () => {
       <ToastContainer />
       <Box sx={{ width: '100%' }}>
         <Paper sx={{ width: '100%', mb: 2 }}>
-          <EnhancedTableToolbar
-            numSelected={selected.length}
-            selected={selected}
-          />
           <TableContainer className="Book-list">
             <Table
               sx={{ minWidth: 750 }}
@@ -410,7 +305,7 @@ const BookList = () => {
                   order={order}
                   orderBy={orderBy}
                   onRequestSort={handleRequestSort}
-                  rowCount={books.length}
+                  rowCount={archiveLoans.length}
                 />
               }
               <TableBody>
@@ -429,21 +324,13 @@ const BookList = () => {
                       selected={isItemSelected}
                       sx={{ cursor: 'pointer' }}
                     >
-                      <TableCell
-                        component="th"
-                        id={labelId}
-                        scope="row"
-                        padding="none"
-                      >
-                        {row.title}
-                      </TableCell>
-                      <TableCell align="left">{row.author}</TableCell>
+                      <TableCell align="center">{row.id}</TableCell>
+                      <TableCell align="center">{row.userName}</TableCell>
+                      <TableCell align="center">{row.title}</TableCell>
                       <TableCell align="center">{row.isbn}</TableCell>
-                      <TableCell align="left">{row.publisher}</TableCell>
-                      <TableCell align="center">{row.publishYear}</TableCell>
-                      <TableCell align="center">
-                        {row.availableCopies}
-                      </TableCell>
+                      <TableCell align="center">{row.loanDate}</TableCell>
+                      <TableCell align="center">{row.dueDate}</TableCell>
+                      <TableCell align="center">{row.returnDate}</TableCell>
                     </TableRow>
                   );
                 })}
@@ -462,7 +349,7 @@ const BookList = () => {
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={books.length}
+            count={archiveLoans.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
@@ -478,4 +365,4 @@ const BookList = () => {
   );
 };
 
-export default BookList;
+export default ArchiveLoansList;

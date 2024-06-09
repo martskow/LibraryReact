@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -6,9 +6,16 @@ import {
   TextField,
   Typography,
   Paper,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import MenuBar from '../menu-bar/MenuBarLibrarian';
 import { LibraryClient } from '../api/library-client';
+
+interface AlertProps {
+  message: string;
+  severity: 'success' | 'error';
+}
 
 const AddBookPage = () => {
   const [formData, setFormData] = useState({
@@ -19,6 +26,8 @@ const AddBookPage = () => {
     publishYear: '',
     availableCopies: '',
   });
+
+  const [alert, setAlert] = useState<AlertProps | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -32,11 +41,31 @@ const AddBookPage = () => {
     const libraryClient = new LibraryClient();
     const response = await libraryClient.addBook(formData);
     if (response.success) {
-      console.log('Book added successfully:', response.data);
+      setAlert({ message: 'Book added successfully!', severity: 'success' });
+      setFormData({
+        isbn: '',
+        title: '',
+        author: '',
+        publisher: '',
+        publishYear: '',
+        availableCopies: '',
+      });
     } else {
-      console.error('Failed to add book:', response.statusCode);
+      setAlert({
+        message: `Failed to add book: ${response.statusCode}`,
+        severity: 'error',
+      });
     }
   };
+
+  useEffect(() => {
+    if (alert) {
+      const timer = setTimeout(() => {
+        setAlert(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [alert]);
 
   return (
     <div>
@@ -118,6 +147,18 @@ const AddBookPage = () => {
           </Box>
         </Paper>
       </Container>
+      {alert && (
+        <Snackbar
+          open={!!alert}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          autoHideDuration={3000}
+          onClose={() => setAlert(null)}
+        >
+          <Alert severity={alert.severity} onClose={() => setAlert(null)}>
+            {alert.message}
+          </Alert>
+        </Snackbar>
+      )}
     </div>
   );
 };

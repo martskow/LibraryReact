@@ -10,41 +10,83 @@ import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
 import './HomePage.css';
 import { useApi } from '../api/ApiProvider';
-
-// Mock data
-const user = 'John Doe';
-
-const loans = [
-  { title: 'Book A', loanDate: '2023-01-10', dueDate: '2023-01-20' },
-  { title: 'Book B', loanDate: '2023-02-15', dueDate: '2023-02-25' },
-];
-
-const queues = [
-  { title: 'Book C', queueStartDate: '2023-03-01', available: true },
-  { title: 'Book D', queueStartDate: '2023-04-10', available: false },
-  { title: 'Book E', queueStartDate: '2023-05-10', available: true },
-];
-
-const statistics = [
-  { name: 'Borrowed books', value: 10 },
-  { name: 'Reviews posted', value: 5 },
-  { name: 'Now Reading', value: 2 },
-  { name: 'In queue', value: 3 },
-];
+import { useEffect } from 'react';
+import { LoanResponseDto } from '../api/dto/loan.dto';
+import { QueueResponseDto } from '../api/dto/queue.dto';
+import { StatsResponseDto } from '../api/dto/statistics.dto';
+import IconButton from '@mui/material/IconButton';
+import RemoveIcon from '@mui/icons-material/Remove';
+import ImportContactsIcon from '@mui/icons-material/ImportContacts';
 
 function HomePageUser() {
   const apiClient = useApi();
+  const [loans, setLoans] = React.useState<LoanResponseDto[]>([]);
+  const [queues, setQueues] = React.useState<QueueResponseDto[]>([]);
+  const [statistics, setStatistics] = React.useState<StatsResponseDto>({});
 
-  apiClient.getBooks().then((response) => {
-    console.log(response);
-  });
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const response = await apiClient.getUserLoans();
+        if (response.success && response.data) {
+          setLoans(response.data);
+          console.log(response.data);
+        } else {
+          console.error('Failed to fetch user loans');
+        }
+      } catch (error) {
+        console.error('Error fetching user loans', error);
+      }
+      try {
+        const response = await apiClient.getUserQueues();
+        if (response.success && response.data) {
+          setQueues(response.data);
+          console.log(response.data);
+        } else {
+          console.error('Failed to fetch user queues');
+        }
+      } catch (error) {
+        console.error('Error fetching user queues', error);
+      }
+      try {
+        const response = await apiClient.getUserStats();
+        if (response.success && response.data) {
+          setStatistics(response.data);
+          console.log(response.data);
+        } else {
+          console.error('Failed to fetch user statistics');
+        }
+      } catch (error) {
+        console.error('Error fetching user statistics', error);
+      }
+    }
+
+    fetchData();
+  }, [apiClient]);
+
+  const handleDeleteQueue = async (queueId: number) => {
+    try {
+      const response = await apiClient.deleteQueue(queueId);
+      if (response.success) {
+        const updatedQueuesResponse = await apiClient.getUserQueues();
+        if (updatedQueuesResponse.success && updatedQueuesResponse.data) {
+          setQueues(updatedQueuesResponse.data);
+        } else {
+          console.error('Failed to fetch updated user queues');
+        }
+      } else {
+        console.error('Failed to delete queue');
+      }
+    } catch (error) {
+      console.error('Error deleting queue', error);
+    }
+  };
 
   return (
     <div>
       <MenuBar />
       <img className="image-banner" src="/books1.jpg" alt="Banner" />
       <div className="content">
-        <h2>Welcome {user}!</h2>
         <div className="main-content">
           <div className="left-section">
             <div className="table-section">
@@ -52,12 +94,12 @@ function HomePageUser() {
               <TableContainer component={Paper}>
                 <Table sx={{ minWidth: 300 }} aria-label="statistics table">
                   <TableBody>
-                    {statistics.map((stat, index) => (
+                    {Object.entries(statistics).map(([name, value], index) => (
                       <TableRow key={index}>
                         <TableCell component="th" scope="row">
-                          {stat.name}
+                          {name}
                         </TableCell>
-                        <TableCell>{stat.value}</TableCell>
+                        <TableCell>{value}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -72,19 +114,23 @@ function HomePageUser() {
                 <Table sx={{ minWidth: 650 }} aria-label="loans table">
                   <TableHead>
                     <TableRow>
-                      <TableCell>Title</TableCell>
-                      <TableCell>Loan date</TableCell>
-                      <TableCell>Due Date</TableCell>
+                      <TableCell align="center">Title</TableCell>
+                      <TableCell align="center">Author</TableCell>
+                      <TableCell align="center">Loan date</TableCell>
+                      <TableCell align="center">Due Date</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {loans.map((loan, index) => (
                       <TableRow key={index}>
-                        <TableCell component="th" scope="row">
-                          {loan.title}
+                        <TableCell align="center" component="th" scope="row">
+                          {loan.book?.title}
                         </TableCell>
-                        <TableCell>{loan.loanDate}</TableCell>
-                        <TableCell>{loan.dueDate}</TableCell>
+                        <TableCell align="center" component="th" scope="row">
+                          {loan.book?.author}
+                        </TableCell>
+                        <TableCell align="center">{loan.loanDate}</TableCell>
+                        <TableCell align="center">{loan.dueDate}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -97,26 +143,38 @@ function HomePageUser() {
                 <Table sx={{ minWidth: 650 }} aria-label="queues table">
                   <TableHead>
                     <TableRow>
-                      <TableCell>Title</TableCell>
-                      <TableCell>Queue start date</TableCell>
-                      <TableCell>Available</TableCell>
-                      <TableCell></TableCell>
+                      <TableCell align="center">Title</TableCell>
+                      <TableCell align="center">Author</TableCell>
+                      <TableCell align="center">Queue start date</TableCell>
+                      <TableCell align="center">Available</TableCell>
+                      <TableCell align="center">Delete</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {queues.map((queue, index) => (
                       <TableRow key={index}>
-                        <TableCell component="th" scope="row">
-                          {queue.title}
+                        <TableCell align="center" component="th" scope="row">
+                          {queue.book?.title}
                         </TableCell>
-                        <TableCell>{queue.queueStartDate}</TableCell>
-                        <TableCell>
-                          {queue.available ? 'True' : 'False'}
+                        <TableCell align="center" component="th" scope="row">
+                          {queue.book?.author}
                         </TableCell>
-                        <TableCell>
-                          {queue.available && (
-                            <Button variant="contained">Borrow</Button>
-                          )}
+                        <TableCell align="center">
+                          {queue.queuingDate}
+                        </TableCell>
+                        <TableCell align="center">
+                          {queue.book?.availableCopies === 0 ? 'False' : 'True'}
+                        </TableCell>
+                        <TableCell align="center">
+                          <IconButton
+                            onClick={() => {
+                              if (queue.queueId !== undefined) {
+                                handleDeleteQueue(queue.queueId);
+                              }
+                            }}
+                          >
+                            <RemoveIcon />
+                          </IconButton>
                         </TableCell>
                       </TableRow>
                     ))}

@@ -114,11 +114,16 @@ function ResponsiveAppBar() {
                       <MenuItem onClick={() => navigate('/loans')}>
                         Loans
                       </MenuItem>
-                      <MenuItem onClick={() => navigate('/booksList')}>
+                      <MenuItem onClick={() => navigate('/booksListLibrarian')}>
                         Books
                       </MenuItem>
                       <MenuItem onClick={() => navigate('/users')}>
                         Users
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => navigate('/archiveLoansLibrarian')}
+                      >
+                        Archive loans
                       </MenuItem>
                     </Menu>
                   </FormControl>

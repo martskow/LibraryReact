@@ -1,5 +1,5 @@
 import { LibraryClient } from './library-client';
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useCallback, useContext } from 'react';
 
 const ApiContext = createContext(new LibraryClient());
 
