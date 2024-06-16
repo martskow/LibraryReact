@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Button,
@@ -11,11 +11,42 @@ import {
   FormControl,
   InputLabel,
   SelectChangeEvent,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import MenuBar from '../menu-bar/MenuBarAdmin';
 import { LibraryClient } from '../api/library-client';
+import { useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie';
+
+interface AlertProps {
+  message: string;
+  severity: 'success' | 'error';
+}
 
 const AddUserPage = () => {
+  const navigate = useNavigate();
+  const libraryClient = new LibraryClient();
+
+  const checkUserRole = async () => {
+    const token = Cookies.get('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    const userRoleResponse = await libraryClient.getUserRole();
+    if (userRoleResponse.statusCode === 200 && userRoleResponse.data) {
+      const role = userRoleResponse.data;
+      if (role !== 'ROLE_ADMIN') {
+        navigate('/login');
+      }
+    } else {
+      navigate('/login');
+    }
+  };
+  checkUserRole();
+
   const [formData, setFormData] = React.useState({
     userName: '',
     userPassword: '',
@@ -24,6 +55,8 @@ const AddUserPage = () => {
     userFirstName: '',
     userLastName: '',
   });
+
+  const [alert, setAlert] = useState<AlertProps | null>(null);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>,
@@ -48,6 +81,7 @@ const AddUserPage = () => {
     const libraryClient = new LibraryClient();
     const response = await libraryClient.addUser(formData);
     if (response.success) {
+      setAlert({ message: 'User added successfully!', severity: 'success' });
       console.log('User added successfully:', response.data);
       setFormData({
         userName: '',
@@ -58,6 +92,10 @@ const AddUserPage = () => {
         userLastName: '',
       });
     } else {
+      setAlert({
+        message: `Failed to add user: ${response.statusCode}`,
+        severity: 'error',
+      });
       console.error('Failed to add user:', response.statusCode);
     }
   };
@@ -151,6 +189,18 @@ const AddUserPage = () => {
           </Box>
         </Paper>
       </Container>
+      {alert && (
+        <Snackbar
+          open={!!alert}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          autoHideDuration={3000}
+          onClose={() => setAlert(null)}
+        >
+          <Alert severity={alert.severity} onClose={() => setAlert(null)}>
+            {alert.message}
+          </Alert>
+        </Snackbar>
+      )}
     </div>
   );
 };

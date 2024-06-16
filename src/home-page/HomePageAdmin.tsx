@@ -2,9 +2,32 @@ import React from 'react';
 import { Box, Button, Container, Typography } from '@mui/material';
 import MenuBar from '../menu-bar/MenuBarAdmin';
 import { useNavigate } from 'react-router-dom';
+import { LibraryClient } from '../api/library-client';
+import Cookies from 'js-cookie';
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const libraryClient = new LibraryClient();
+
+  const checkUserRole = async () => {
+    const token = Cookies.get('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    const userRoleResponse = await libraryClient.getUserRole();
+    if (userRoleResponse.statusCode === 200 && userRoleResponse.data) {
+      const role = userRoleResponse.data;
+      if (role !== 'ROLE_ADMIN') {
+        navigate('/login');
+      }
+    } else {
+      navigate('/login');
+    }
+  };
+  checkUserRole();
+
   return (
     <div>
       <MenuBar />

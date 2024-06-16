@@ -14,11 +14,13 @@ import MenuItem from '@mui/material/MenuItem';
 import Tooltip from '@mui/material/Tooltip';
 import { FormControl } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
-const pages = ['Library', 'Blog', 'About us'];
-const settings = ['Profile', 'Account', 'Settings', 'Logout'];
+const pages = ['library', 'blog', 'about_us'];
+const settings = ['profile', 'account', 'settings', 'logout'];
 
 function ResponsiveAppBar() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
     null,
@@ -53,13 +55,13 @@ function ResponsiveAppBar() {
 
   const handleUserMenuItemClick = (setting: string) => {
     handleCloseUserMenu();
-    if (setting === 'Logout') {
+    if (setting === 'logout') {
       navigate('/startPage');
-    } else if (setting === 'Profile') {
+    } else if (setting === 'profile') {
       navigate('/profile');
-    } else if (setting === 'Account') {
+    } else if (setting === 'account') {
       navigate('/account');
-    } else if (setting === 'Settings') {
+    } else if (setting === 'settings') {
       navigate('/settings');
     }
   };
@@ -73,7 +75,7 @@ function ResponsiveAppBar() {
               size="large"
               edge="start"
               color="inherit"
-              aria-label="open drawer"
+              aria-label={t('home')}
               sx={{ mr: 2 }}
               onClick={() => navigate('/home')}
             >
@@ -83,7 +85,7 @@ function ResponsiveAppBar() {
           <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
             {pages.map((page) => (
               <Box key={page}>
-                {page === 'Library' ? (
+                {page === 'library' ? (
                   <FormControl>
                     <Button
                       sx={{
@@ -93,7 +95,7 @@ function ResponsiveAppBar() {
                       }}
                       onClick={handleOpenNavMenu}
                     >
-                      {page}
+                      {t(page)}
                     </Button>
                     <Menu
                       id="library-menu"
@@ -103,34 +105,36 @@ function ResponsiveAppBar() {
                       onClose={handleCloseNavMenu}
                     >
                       <MenuItem onClick={() => navigate('/borrow')}>
-                        Borrow
+                        {t('borrow')}
                       </MenuItem>
                       <MenuItem onClick={() => navigate('/booksList')}>
-                        Books
+                        {t('books')}
                       </MenuItem>
                       <MenuItem onClick={() => navigate('/reviews')}>
-                        Reviews
+                        {t('reviews')}
                       </MenuItem>
                     </Menu>
                   </FormControl>
                 ) : (
                   <Button
                     key={page}
-                    onClick={handleCloseNavMenu}
+                    onClick={() =>
+                      navigate(`/${page.toLowerCase().replace(' ', '')}`)
+                    }
                     sx={{
                       my: 2,
                       color: 'white',
                       display: { xs: 'none', md: 'block' },
                     }}
                   >
-                    {page}
+                    {t(page)}
                   </Button>
                 )}
               </Box>
             ))}
           </Box>
           <Box>
-            <Tooltip title="Open settings">
+            <Tooltip title={t('open_settings')}>
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                 <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
               </IconButton>
@@ -155,7 +159,7 @@ function ResponsiveAppBar() {
                   key={setting}
                   onClick={() => handleUserMenuItemClick(setting)}
                 >
-                  <Typography textAlign="center">{setting}</Typography>
+                  <Typography textAlign="center">{t(setting)}</Typography>
                 </MenuItem>
               ))}
             </Menu>

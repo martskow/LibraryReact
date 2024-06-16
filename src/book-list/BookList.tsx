@@ -30,6 +30,9 @@ import Cookies from 'js-cookie';
 import { QueueDto } from '../api/dto/queue.dto';
 import { toast, ToastContainer } from 'react-toastify';
 import { Alert, Snackbar } from '@mui/material';
+import { useTranslation } from 'react-i18next';
+import RateReviewIcon from '@mui/icons-material/RateReview';
+import AddReview from '../add-review/AddReview';
 
 interface Data {
   id: number;
@@ -178,6 +181,8 @@ function EnhancedTableHead(props: EnhancedTableProps) {
     }
   }, [alert]);
 
+  const { t } = useTranslation();
+
   return (
     <TableHead>
       <TableRow>
@@ -193,7 +198,7 @@ function EnhancedTableHead(props: EnhancedTableProps) {
               direction={orderBy === headCell.id ? order : 'asc'}
               onClick={createSortHandler(headCell.id)}
             >
-              {headCell.label}
+              {t(headCell.label)}
               {orderBy === headCell.id ? (
                 <Box component="span" sx={visuallyHidden}>
                   {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
@@ -215,6 +220,18 @@ interface EnhancedTableToolbarProps {
 function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
   const { numSelected, selected } = props;
   const [alert, setAlert] = useState<AlertProps | null>(null);
+  const navigate = useNavigate();
+
+  const { t } = useTranslation();
+  /*const handleAddReview = (bookId: number) => {
+    navigate(`/addReview?bookId=${bookId}`);
+    console.log(bookId);
+  };*/
+
+  const handleGetReviews = (bookId: number) => {
+    navigate(`/getReviews?bookId=${bookId}`);
+    console.log(bookId);
+  };
 
   return (
     <Toolbar
@@ -237,7 +254,7 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
           variant="subtitle1"
           component="div"
         >
-          // ew napis na pasku
+          {t('Selected')} {numSelected}
         </Typography>
       ) : (
         <Typography
@@ -246,21 +263,26 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
           id="tableTitle"
           component="div"
         >
-          Book List
+          {t('Book List')}
         </Typography>
       )}
       {numSelected > 0 ? (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Tooltip title="More information">
-            <IconButton>
+          <Tooltip title={t('reviews')}>
+            <IconButton onClick={() => handleGetReviews(selected[0])}>
               <ImportContactsIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Add to queue">
+          <Tooltip title={t('Add to queue')}>
             <IconButton onClick={() => handleAddToQueue(selected[0], setAlert)}>
               <AddBoxIcon />
             </IconButton>
           </Tooltip>
+          {/*<Tooltip title={t('Add review')}>
+            <IconButton onClick={() => handleAddReview(selected[0])}>
+              <RateReviewIcon />
+            </IconButton>
+          </Tooltip>*/}
           {alert && (
             <Snackbar
               open={!!alert}
@@ -275,7 +297,7 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
           )}
         </Box>
       ) : (
-        <Tooltip title="Filter list">
+        <Tooltip title={t('Filter list')}>
           <IconButton>
             <FilterListIcon />
           </IconButton>
@@ -294,6 +316,8 @@ const BookList = () => {
   const [dense, setDense] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [books, setBooks] = useState<BookResponseDto[]>([]);
+
+  const { t } = useTranslation();
 
   useEffect(() => {
     const libraryClient = new LibraryClient();
@@ -471,7 +495,7 @@ const BookList = () => {
         </Paper>
         <FormControlLabel
           control={<Switch checked={dense} onChange={handleChangeDense} />}
-          label="Dense padding"
+          label={t('Dense padding')}
         />
       </Box>
     </div>

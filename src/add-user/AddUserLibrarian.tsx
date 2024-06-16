@@ -6,10 +6,17 @@ import {
   TextField,
   Typography,
   Paper,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import MenuBar from '../menu-bar/MenuBarLibrarian';
 import axios from 'axios';
 import { LibraryClient } from '../api/library-client';
+
+interface AlertProps {
+  message: string;
+  severity: 'success' | 'error';
+}
 
 const AddUserPage = () => {
   const [formData, setFormData] = useState({
@@ -20,6 +27,8 @@ const AddUserPage = () => {
     userFirstName: '',
     userLastName: '',
   });
+
+  const [alert, setAlert] = useState<AlertProps | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -33,6 +42,7 @@ const AddUserPage = () => {
     const libraryClient = new LibraryClient();
     const response = await libraryClient.addUser(formData);
     if (response.success) {
+      setAlert({ message: 'User added successfully!', severity: 'success' });
       console.log('User added successfully:', response.data);
       setFormData({
         userName: '',
@@ -43,6 +53,10 @@ const AddUserPage = () => {
         userLastName: '',
       });
     } else {
+      setAlert({
+        message: `Failed to add user: ${response.statusCode}`,
+        severity: 'error',
+      });
       console.error('Failed to add user:', response.statusCode);
     }
   };
@@ -122,6 +136,18 @@ const AddUserPage = () => {
           </Box>
         </Paper>
       </Container>
+      {alert && (
+        <Snackbar
+          open={!!alert}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          autoHideDuration={3000}
+          onClose={() => setAlert(null)}
+        >
+          <Alert severity={alert.severity} onClose={() => setAlert(null)}>
+            {alert.message}
+          </Alert>
+        </Snackbar>
+      )}
     </div>
   );
 };

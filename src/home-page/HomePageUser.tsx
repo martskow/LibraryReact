@@ -17,12 +17,40 @@ import { StatsResponseDto } from '../api/dto/statistics.dto';
 import IconButton from '@mui/material/IconButton';
 import RemoveIcon from '@mui/icons-material/Remove';
 import ImportContactsIcon from '@mui/icons-material/ImportContacts';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { LibraryClient } from '../api/library-client';
+import Cookies from 'js-cookie';
+import RateReviewIcon from '@mui/icons-material/RateReview';
+import Tooltip from '@mui/material/Tooltip';
 
 function HomePageUser() {
   const apiClient = useApi();
   const [loans, setLoans] = React.useState<LoanResponseDto[]>([]);
   const [queues, setQueues] = React.useState<QueueResponseDto[]>([]);
   const [statistics, setStatistics] = React.useState<StatsResponseDto>({});
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const libraryClient = new LibraryClient();
+
+  const checkUserRole = async () => {
+    const token = Cookies.get('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    const userRoleResponse = await libraryClient.getUserRole();
+    if (userRoleResponse.statusCode === 200 && userRoleResponse.data) {
+      const role = userRoleResponse.data;
+      if (role !== 'ROLE_USER') {
+        navigate('/login');
+      }
+    } else {
+      navigate('/login');
+    }
+  };
+  checkUserRole();
 
   useEffect(() => {
     async function fetchData() {
@@ -64,6 +92,11 @@ function HomePageUser() {
     fetchData();
   }, [apiClient]);
 
+  const handleAddReview = (bookId: number) => {
+    navigate(`/addReview?bookId=${bookId}`);
+    console.log(bookId);
+  };
+
   const handleDeleteQueue = async (queueId: number) => {
     try {
       const response = await apiClient.deleteQueue(queueId);
@@ -90,14 +123,14 @@ function HomePageUser() {
         <div className="main-content">
           <div className="left-section">
             <div className="table-section">
-              <h3>Statistics</h3>
+              <h3>{t('statistics')}</h3>
               <TableContainer component={Paper}>
                 <Table sx={{ minWidth: 300 }} aria-label="statistics table">
                   <TableBody>
                     {Object.entries(statistics).map(([name, value], index) => (
                       <TableRow key={index}>
                         <TableCell component="th" scope="row">
-                          {name}
+                          {t(name)}
                         </TableCell>
                         <TableCell>{value}</TableCell>
                       </TableRow>
@@ -109,15 +142,16 @@ function HomePageUser() {
           </div>
           <div className="right-section">
             <div className="table-section">
-              <h3>Loans</h3>
+              <h3>{t('loans')}</h3>
               <TableContainer component={Paper}>
                 <Table sx={{ minWidth: 650 }} aria-label="loans table">
                   <TableHead>
                     <TableRow>
-                      <TableCell align="center">Title</TableCell>
-                      <TableCell align="center">Author</TableCell>
-                      <TableCell align="center">Loan date</TableCell>
-                      <TableCell align="center">Due Date</TableCell>
+                      <TableCell align="center">{t('title')}</TableCell>
+                      <TableCell align="center">{t('author')}</TableCell>
+                      <TableCell align="center">{t('loan_date')}</TableCell>
+                      <TableCell align="center">{t('due_date')}</TableCell>
+                      <TableCell align="center">{t('add_review')}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -131,6 +165,19 @@ function HomePageUser() {
                         </TableCell>
                         <TableCell align="center">{loan.loanDate}</TableCell>
                         <TableCell align="center">{loan.dueDate}</TableCell>
+                        <TableCell align="center">
+                          <Tooltip title={t('Add review')}>
+                            <IconButton
+                              onClick={() => {
+                                if (loan.book?.id !== undefined) {
+                                  handleAddReview(loan.book.id);
+                                }
+                              }}
+                            >
+                              <RateReviewIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -138,16 +185,18 @@ function HomePageUser() {
               </TableContainer>
             </div>
             <div className="table-section">
-              <h3>Queues</h3>
+              <h3>{t('queues')}</h3>
               <TableContainer component={Paper}>
                 <Table sx={{ minWidth: 650 }} aria-label="queues table">
                   <TableHead>
                     <TableRow>
-                      <TableCell align="center">Title</TableCell>
-                      <TableCell align="center">Author</TableCell>
-                      <TableCell align="center">Queue start date</TableCell>
-                      <TableCell align="center">Available</TableCell>
-                      <TableCell align="center">Delete</TableCell>
+                      <TableCell align="center">{t('title')}</TableCell>
+                      <TableCell align="center">{t('author')}</TableCell>
+                      <TableCell align="center">
+                        {t('queue_start_date')}
+                      </TableCell>
+                      <TableCell align="center">{t('available')}</TableCell>
+                      <TableCell align="center">{t('delete')}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>

@@ -32,6 +32,7 @@ import MoreTimeIcon from '@mui/icons-material/MoreTime';
 import { Alert, Snackbar } from '@mui/material';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie';
 
 interface Data {
   id: number;
@@ -323,6 +324,27 @@ const LoansList = () => {
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [loans, setLoans] = useState<LoanResponseDto[]>([]);
   const apiClient = useApi();
+  const navigate = useNavigate();
+  const libraryClient = new LibraryClient();
+
+  const checkUserRole = async () => {
+    const token = Cookies.get('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    const userRoleResponse = await libraryClient.getUserRole();
+    if (userRoleResponse.statusCode === 200 && userRoleResponse.data) {
+      const role = userRoleResponse.data;
+      if (role !== 'ROLE_LIBRARIAN') {
+        navigate('/login');
+      }
+    } else {
+      navigate('/login');
+    }
+  };
+  checkUserRole();
 
   useEffect(() => {
     const libraryClient = new LibraryClient();

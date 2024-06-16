@@ -16,11 +16,13 @@ import SearchIcon from '@mui/icons-material/Search';
 import Tooltip from '@mui/material/Tooltip';
 import { FormControl } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const pages = ['Library', 'Blog', 'About us'];
 const settings = ['Profile', 'Account', 'Settings', 'Logout'];
 
 function ResponsiveAppBar() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
     null,
@@ -46,13 +48,13 @@ function ResponsiveAppBar() {
 
   const handleUserMenuItemClick = (setting: string) => {
     handleCloseUserMenu();
-    if (setting === 'Logout') {
+    if (setting === t('Logout')) {
       navigate('/startPage');
-    } else if (setting === 'Profile') {
+    } else if (setting === t('Profile')) {
       navigate('/profile');
-    } else if (setting === 'Account') {
+    } else if (setting === t('Account')) {
       navigate('/account');
-    } else if (setting === 'Settings') {
+    } else if (setting === t('Settings')) {
       navigate('/settings');
     }
   };
@@ -102,7 +104,7 @@ function ResponsiveAppBar() {
                       }}
                       onClick={handleOpenNavMenu}
                     >
-                      {page}
+                      {t(page)}
                     </Button>
                     <Menu
                       id="library-menu"
@@ -112,18 +114,18 @@ function ResponsiveAppBar() {
                       onClose={handleCloseNavMenu}
                     >
                       <MenuItem onClick={() => navigate('/loans')}>
-                        Loans
+                        {t('Loans')}
                       </MenuItem>
                       <MenuItem onClick={() => navigate('/booksListLibrarian')}>
-                        Books
+                        {t('Books')}
                       </MenuItem>
                       <MenuItem onClick={() => navigate('/users')}>
-                        Users
+                        {t('Users')}
                       </MenuItem>
                       <MenuItem
                         onClick={() => navigate('/archiveLoansLibrarian')}
                       >
-                        Archive loans
+                        {t('Archive loans')}
                       </MenuItem>
                     </Menu>
                   </FormControl>
@@ -137,14 +139,14 @@ function ResponsiveAppBar() {
                       display: { xs: 'none', md: 'block' },
                     }}
                   >
-                    {page}
+                    {t(page)}
                   </Button>
                 )}
               </Box>
             ))}
           </Box>
           <Box>
-            <Tooltip title="Open settings">
+            <Tooltip title={t('Open settings')}>
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                 <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
               </IconButton>
@@ -167,9 +169,9 @@ function ResponsiveAppBar() {
               {settings.map((setting) => (
                 <MenuItem
                   key={setting}
-                  onClick={() => handleUserMenuItemClick(setting)}
+                  onClick={() => handleUserMenuItemClick(t(setting))}
                 >
-                  <Typography textAlign="center">{setting}</Typography>
+                  <Typography textAlign="center">{t(setting)}</Typography>
                 </MenuItem>
               ))}
             </Menu>

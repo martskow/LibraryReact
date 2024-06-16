@@ -16,26 +16,23 @@ import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
-import AddBoxIcon from '@mui/icons-material/AddBox';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
-import './BookList.css';
-import MenuBar from '../menu-bar/MenuBarLibrarian';
-import ImportContactsIcon from '@mui/icons-material/ImportContacts';
-import { ClientResponse, LibraryClient } from '../api/library-client';
-import { BookResponseDto } from '../api/dto/book.dto';
+import MenuBar from '../menu-bar/MenuBarUser';
 import { useEffect, useState } from 'react';
+import { LibraryClient } from '../api/library-client';
+import { useApi } from '../api/ApiProvider';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import { ReviewResponseDto } from '../api/dto/review.dto';
 
 interface Data {
   id: number;
+  userName: string;
   title: string;
   author: string;
-  isbn: string;
-  publisher: string;
-  publishYear: string;
-  availableCopies: number;
+  reviewDate: string;
+  comment: string;
+  rating: number;
 }
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
@@ -85,26 +82,21 @@ interface HeadCell {
 }
 
 const headCells: readonly HeadCell[] = [
-  { id: 'title', numeric: false, disablePadding: true, label: 'Title' },
+  { id: 'id', numeric: true, disablePadding: true, label: 'Review ID' },
+  { id: 'userName', numeric: false, disablePadding: false, label: 'Username' },
+  { id: 'title', numeric: false, disablePadding: false, label: 'Title' },
   { id: 'author', numeric: false, disablePadding: false, label: 'Author' },
-  { id: 'isbn', numeric: false, disablePadding: false, label: 'ISBN' },
   {
-    id: 'publisher',
+    id: 'reviewDate',
     numeric: false,
     disablePadding: false,
-    label: 'Publisher',
+    label: 'Review Date',
   },
   {
-    id: 'publishYear',
-    numeric: false,
-    disablePadding: false,
-    label: 'Publish Year',
-  },
-  {
-    id: 'availableCopies',
+    id: 'rating',
     numeric: true,
     disablePadding: false,
-    label: 'Available Copies',
+    label: 'Rating',
   },
 ];
 
@@ -119,11 +111,19 @@ interface EnhancedTableProps {
   rowCount: number;
 }
 
+const libraryClient = new LibraryClient();
+
+interface AlertProps {
+  message: string;
+  severity: 'success' | 'error';
+}
+
 function EnhancedTableHead(props: EnhancedTableProps) {
   const { order, orderBy, onRequestSort } = props;
+  const [alert, setAlert] = useState<AlertProps | null>(null);
   const createSortHandler =
-    (property: string) => (event: React.MouseEvent<unknown>) => {
-      onRequestSort(event, property as keyof Data);
+    (property: keyof Data) => (event: React.MouseEvent<unknown>) => {
+      onRequestSort(event, property);
     };
 
   return (
@@ -157,76 +157,20 @@ function EnhancedTableHead(props: EnhancedTableProps) {
 
 interface EnhancedTableToolbarProps {
   numSelected: number;
+  selected: readonly number[];
 }
 
-function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
-  const { numSelected } = props;
-
-  return (
-    <Toolbar
-      sx={{
-        pl: { sm: 2 },
-        pr: { xs: 1, sm: 1 },
-        ...(numSelected > 0 && {
-          bgcolor: (theme) =>
-            alpha(
-              theme.palette.primary.main,
-              theme.palette.action.activatedOpacity,
-            ),
-        }),
-      }}
-    >
-      {numSelected > 0 ? (
-        <Typography
-          sx={{ flex: '1 1 100%' }}
-          color="inherit"
-          variant="subtitle1"
-          component="div"
-        >
-          // ew napis na pasku
-        </Typography>
-      ) : (
-        <Typography
-          sx={{ flex: '1 1 100%' }}
-          variant="h6"
-          id="tableTitle"
-          component="div"
-        >
-          Book List
-        </Typography>
-      )}
-      {numSelected > 0 ? (
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Tooltip title="More information">
-            <IconButton>
-              <ImportContactsIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Borrow">
-            <IconButton>
-              <AddBoxIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      ) : (
-        <Tooltip title="Filter list">
-          <IconButton>
-            <FilterListIcon />
-          </IconButton>
-        </Tooltip>
-      )}
-    </Toolbar>
-  );
-}
-const BookList = () => {
-  const navigate = useNavigate();
+const ReviewList = () => {
   const [order, setOrder] = React.useState<Order>('asc');
-  const [orderBy, setOrderBy] = React.useState<keyof Data>('author');
+  const [orderBy, setOrderBy] = React.useState<keyof Data>('id');
   const [selected, setSelected] = React.useState<readonly number[]>([]);
   const [page, setPage] = React.useState(0);
   const [dense, setDense] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
-  const [books, setBooks] = useState<BookResponseDto[]>([]);
+  const [reviews, setReviews] = useState<ReviewResponseDto[]>([]);
+  const [expandedRow, setExpandedRow] = useState<number | null>(null);
+  const apiClient = useApi();
+  const navigate = useNavigate();
   const libraryClient = new LibraryClient();
 
   const checkUserRole = async () => {
@@ -239,7 +183,7 @@ const BookList = () => {
     const userRoleResponse = await libraryClient.getUserRole();
     if (userRoleResponse.statusCode === 200 && userRoleResponse.data) {
       const role = userRoleResponse.data;
-      if (role !== 'ROLE_ADMIN') {
+      if (role !== 'ROLE_USER') {
         navigate('/login');
       }
     } else {
@@ -250,36 +194,18 @@ const BookList = () => {
 
   useEffect(() => {
     const libraryClient = new LibraryClient();
-    const fetchBooks = async () => {
-      const response = await libraryClient.getBooks();
+    const fetchReviews = async () => {
+      const response = await libraryClient.getReviews();
       if (response.success && response.data) {
-        setBooks(response.data);
+        setReviews(response.data);
         console.log(response.data);
       } else {
-        console.error('Failed to fetch books');
-      }
-    };
-    const checkUserRole = async () => {
-      const token = Cookies.get('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-
-      const userRoleResponse = await libraryClient.getUserRole();
-      if (userRoleResponse.statusCode === 200 && userRoleResponse.data) {
-        const role = userRoleResponse.data;
-        if (role !== 'ROLE_USER') {
-          navigate('/login');
-        }
-      } else {
-        navigate('/login');
+        console.error('Failed to fetch reviews');
       }
     };
 
-    fetchBooks();
-    checkUserRole();
-  }, [navigate]);
+    fetchReviews();
+  }, []);
 
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
@@ -290,17 +216,8 @@ const BookList = () => {
     setOrderBy(property);
   };
 
-  const handleClick = (event: React.MouseEvent<unknown>, id: number) => {
-    const selectedIndex = selected.indexOf(id);
-    let newSelected: readonly number[] = [];
-
-    if (selectedIndex === -1) {
-      newSelected = [id];
-    } else {
-      newSelected = [];
-    }
-
-    setSelected(newSelected);
+  const handleClick = (id: number) => {
+    setExpandedRow(expandedRow === id ? null : id);
   };
 
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -320,80 +237,71 @@ const BookList = () => {
 
   const isSelected = (id: number) => selected.indexOf(id) !== -1;
 
-  // Avoid a layout jump when reaching the last page with empty rows.
   const emptyRows =
-    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - books.length) : 0;
+    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - reviews.length) : 0;
 
   const visibleRows = React.useMemo(() => {
-    const formattedBooks = books.map((book) => ({
-      id: book.id || 0,
-      title: book.title || '',
-      author: book.author || '',
-      isbn: book.isbn || '',
-      publisher: book.publisher || '',
-      publishYear: book.publishYear || '',
-      availableCopies: book.availableCopies || 0,
-    }));
-
-    return stableSort(formattedBooks, getComparator(order, orderBy)).slice(
-      page * rowsPerPage,
-      page * rowsPerPage + rowsPerPage,
-    );
-  }, [books, order, orderBy, page, rowsPerPage]);
+    return stableSort(
+      reviews.map((review) => ({
+        id: review.reviewId || 0,
+        userName: review.user?.userName || '',
+        title: review.book?.title || '',
+        author: review.book?.author || '',
+        reviewDate: review.reviewDate || '',
+        comment: review.comment || '',
+        rating: review.rating || 0,
+      })),
+      getComparator(order, orderBy),
+    ).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  }, [reviews, order, orderBy, page, rowsPerPage]);
 
   return (
     <div>
       <MenuBar />
       <Box sx={{ width: '100%' }}>
         <Paper sx={{ width: '100%', mb: 2 }}>
-          <EnhancedTableToolbar numSelected={selected.length} />
-          <TableContainer className="Book-list">
+          <TableContainer className="Review-list">
             <Table
               sx={{ minWidth: 750 }}
               aria-labelledby="tableTitle"
               size={dense ? 'small' : 'medium'}
             >
-              {
-                <EnhancedTableHead
-                  numSelected={selected.length}
-                  order={order}
-                  orderBy={orderBy}
-                  onRequestSort={handleRequestSort}
-                  rowCount={books.length}
-                />
-              }
+              <EnhancedTableHead
+                numSelected={selected.length}
+                order={order}
+                orderBy={orderBy}
+                onRequestSort={handleRequestSort}
+                rowCount={reviews.length}
+              />
               <TableBody>
                 {visibleRows.map((row, index) => {
                   const isItemSelected = isSelected(row.id);
                   const labelId = `enhanced-table-checkbox-${index}`;
 
                   return (
-                    <TableRow
-                      hover
-                      onClick={(event) => handleClick(event, row.id)}
-                      role="checkbox"
-                      aria-checked={isItemSelected}
-                      tabIndex={-1}
-                      key={row.id}
-                      selected={isItemSelected}
-                      sx={{ cursor: 'pointer' }}
-                    >
-                      <TableCell
-                        component="th"
-                        id={labelId}
-                        scope="row"
-                        padding="none"
+                    <React.Fragment key={row.id}>
+                      <TableRow
+                        hover
+                        onClick={() => handleClick(row.id)}
+                        role="checkbox"
+                        aria-checked={isItemSelected}
+                        tabIndex={-1}
+                        selected={isItemSelected}
+                        sx={{ cursor: 'pointer' }}
                       >
-                        {row.title}
-                      </TableCell>
-                      <TableCell align="left">{row.author}</TableCell>
-                      <TableCell align="center">{row.isbn}</TableCell>
-                      <TableCell align="left">{row.publisher}</TableCell>
-                      <TableCell align="center">{row.publishYear}</TableCell>
-                      <TableCell align="center">
-                        {row.availableCopies}
-                      </TableCell>
-                    </TableRow>
+                        <TableCell align="center">{row.id}</TableCell>
+                        <TableCell align="center">{row.userName}</TableCell>
+                        <TableCell align="center">{row.title}</TableCell>
+                        <TableCell align="center">{row.author}</TableCell>
+                        <TableCell align="center">{row.reviewDate}</TableCell>
+                        <TableCell align="center">{row.rating}</TableCell>
+                      </TableRow>
+                      {expandedRow === row.id && (
+                        <TableRow>
+                          <TableCell colSpan={6}>{row.comment}</TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
                   );
                 })}
                 {emptyRows > 0 && (
@@ -411,7 +319,7 @@ const BookList = () => {
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={books.length}
+            count={reviews.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
@@ -426,4 +334,4 @@ const BookList = () => {
     </div>
   );
 };
-export default BookList;
+export default ReviewList;

@@ -11,6 +11,8 @@ import {
 } from '@mui/material';
 import MenuBar from '../menu-bar/MenuBarLibrarian';
 import { LibraryClient } from '../api/library-client';
+import Cookies from 'js-cookie';
+import { useNavigate } from 'react-router-dom';
 
 interface AlertProps {
   message: string;
@@ -18,6 +20,28 @@ interface AlertProps {
 }
 
 const AddBookPage = () => {
+  const libraryClient = new LibraryClient();
+  const navigate = useNavigate();
+
+  const checkUserRole = async () => {
+    const token = Cookies.get('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    const userRoleResponse = await libraryClient.getUserRole();
+    if (userRoleResponse.statusCode === 200 && userRoleResponse.data) {
+      const role = userRoleResponse.data;
+      if (role !== 'ROLE_LIBRARIAN') {
+        navigate('/login');
+      }
+    } else {
+      navigate('/login');
+    }
+  };
+  checkUserRole();
+
   const [formData, setFormData] = useState({
     isbn: '',
     title: '',
