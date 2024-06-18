@@ -280,7 +280,10 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
               open={!!alert}
               anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
               autoHideDuration={3000}
-              onClose={() => setAlert(null)}
+              onClose={() => {
+                setAlert(null);
+                window.location.reload();
+              }}
             >
               <Alert severity={alert.severity} onClose={() => setAlert(null)}>
                 {alert.message}
@@ -297,7 +300,10 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
               open={!!alert}
               anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
               autoHideDuration={3000}
-              onClose={() => setAlert(null)}
+              onClose={() => {
+                setAlert(null);
+                window.location.reload();
+              }}
             >
               <Alert severity={alert.severity} onClose={() => setAlert(null)}>
                 {alert.message}
@@ -453,17 +459,14 @@ const LoansList = () => {
                       tabIndex={-1}
                       key={row.id}
                       selected={isItemSelected}
-                      sx={{ cursor: 'pointer' }}
+                      sx={{
+                        cursor: 'pointer',
+                        backgroundColor:
+                          new Date(row.dueDate) < new Date()
+                            ? '#FFEBEE'
+                            : 'inherit',
+                      }}
                     >
-                      {/*<TableCell
-                        component="th"
-                        id={labelId}
-                        scope="row"
-                        padding="none"
-                        align="center"
-                      >
-                        {row.id}
-                      </TableCell>*/}
                       <TableCell align="center">{row.id}</TableCell>
                       <TableCell align="center">{row.userName}</TableCell>
                       <TableCell align="center">{row.title}</TableCell>

@@ -253,9 +253,7 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
           color="inherit"
           variant="subtitle1"
           component="div"
-        >
-          {t('Selected')} {numSelected}
-        </Typography>
+        ></Typography>
       ) : (
         <Typography
           sx={{ flex: '1 1 100%' }}

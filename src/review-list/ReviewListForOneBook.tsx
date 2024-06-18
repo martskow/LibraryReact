@@ -20,6 +20,7 @@ import { useApi } from '../api/ApiProvider';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { ReviewResponseDto } from '../api/dto/review.dto';
+import './Reviews.css';
 
 interface Data {
   id: number;
@@ -256,7 +257,10 @@ const ReviewList = () => {
       <MenuBar />
       <Box sx={{ width: '100%' }}>
         <Paper sx={{ width: '100%', mb: 2 }}>
-          <TableContainer className="Review-list">
+          <TableContainer
+            className="Review-list"
+            sx={{ width: '80%', margin: '0 auto' }}
+          >
             <Table
               sx={{ minWidth: 750 }}
               aria-labelledby="tableTitle"

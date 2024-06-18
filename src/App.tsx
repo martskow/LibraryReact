@@ -22,6 +22,12 @@ import ReviewListUser from './review-list/ReviewListUser';
 import AddReviewPage from './add-review/AddReview';
 import ReviewListForOneBook from './review-list/ReviewListForOneBook';
 import UserList from './users-list/UsersListAdmin';
+import LoansListAdmin from './loans-list/LoansListAdmin';
+import UsersListLibrarian from './users-list/UsersListLibrarian';
+import UsersListAdmin from './users-list/UsersListAdmin';
+import EditUserLibrarian from './edit-user/EditUserLibrarian';
+import MyProfilePage from './user-profile/MyProfileUser';
+import MyProfileUser from './user-profile/MyProfileUser';
 
 function App() {
   return (
@@ -34,9 +40,11 @@ function App() {
             <Route path="/startPage" element={<StartPage />} />
             <Route path="/login" element={<LoginForm />} />
             <Route path="/home" element={<HomePageUser />} />
+            <Route path="/profile" element={<MyProfileUser />} />
             <Route path="/homeAdmin" element={<HomePageAdmin />} />
             <Route path="/homeLibrarian" element={<HomePageLibrarian />} />
             <Route path="/loans" element={<LoansList />} />
+            <Route path="/loansAdmin" element={<LoansListAdmin />} />
             <Route path="/booksList" element={<BookList />} />
             <Route path="/booksListLibrarian" element={<BookListLibrarian />} />
             <Route path="/booksListAdmin" element={<BookListAdmin />} />
@@ -48,6 +56,8 @@ function App() {
             <Route path="/reviews" element={<ReviewListUser />} />
             <Route path="/addReview" element={<AddReviewPage />} />
             <Route path="/addReview/:bookId" element={<AddReviewPage />} />
+            <Route path="/editUser" element={<EditUserLibrarian />} />
+            <Route path="/editUser/:userId" element={<EditUserLibrarian />} />
             <Route path="/getReviews" element={<ReviewListForOneBook />} />
             <Route
               path="/getReviews/:bookId"
@@ -58,7 +68,8 @@ function App() {
               path="/archiveLoansLibrarian"
               element={<ArchiveLoansLibrarian />}
             />
-            <Route path="/users" element={<UserList />} />
+            <Route path="/users" element={<UsersListAdmin />} />
+            <Route path="/usersLibrarian" element={<UsersListLibrarian />} />
           </Routes>
         </ApiProvider>
       </I18nextProvider>

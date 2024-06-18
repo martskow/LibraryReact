@@ -4,8 +4,10 @@ import MenuBar from '../menu-bar/MenuBarAdmin';
 import { useNavigate } from 'react-router-dom';
 import { LibraryClient } from '../api/library-client';
 import Cookies from 'js-cookie';
+import { useTranslation } from 'react-i18next';
 
 const HomePage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const libraryClient = new LibraryClient();
 
@@ -42,30 +44,30 @@ const HomePage = () => {
         }}
       >
         <Typography variant="h4" sx={{ mb: 4 }}>
-          Welcome to the Library System
+          {t('Welcome to the Library System')}
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <Button
             variant="contained"
             color="primary"
-            sx={{ width: '200px', height: '50px', fontSize: '18px' }}
+            sx={{ width: '200px', height: '60px', fontSize: '18px' }}
             onClick={() => navigate('/addUserAdmin')}
           >
-            Add user
+            {t('Add user')}
           </Button>
           <Button
             variant="contained"
             color="primary"
-            sx={{ width: '200px', height: '50px', fontSize: '18px' }}
+            sx={{ width: '200px', height: '60px', fontSize: '18px' }}
           >
-            Add book
+            {t('Add book')}
           </Button>
           <Button
             variant="contained"
             color="primary"
-            sx={{ width: '200px', height: '50px', fontSize: '18px' }}
+            sx={{ width: '200px', height: '60px', fontSize: '18px' }}
           >
-            Add loan
+            {t('Add loan')}
           </Button>
         </Box>
       </Container>

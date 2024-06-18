@@ -7,3 +7,11 @@ export class UserResponseDto {
   userFirstName: string | undefined;
   userLastName: string | undefined;
 }
+
+export class UserDto {
+  userName: string | undefined;
+  role: string | undefined;
+  email: string | undefined;
+  userFirstName: string | undefined;
+  userLastName: string | undefined;
+}

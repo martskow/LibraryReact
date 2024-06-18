@@ -7,7 +7,7 @@ import { QueueDto, QueueResponseDto } from './dto/queue.dto';
 import { StatsResponseDto } from './dto/statistics.dto';
 import { LoanArchiveResponseDto } from './dto/archiveLoan.dto';
 import { ReviewResponseDto } from './dto/review.dto';
-import { UserResponseDto } from './dto/user.dto';
+import { UserDto, UserResponseDto } from './dto/user.dto';
 
 export type ClientResponse<T> = {
   success: boolean;
@@ -139,6 +139,42 @@ export class LibraryClient {
           `Bearer ${token}`;
         const response: AxiosResponse<LoanArchiveResponseDto[]> =
           await this.client.get('/loanArchive/getAll');
+
+        return {
+          success: true,
+          data: response.data,
+          statusCode: response.status,
+        };
+      } else {
+        console.error('Token not found');
+
+        return {
+          success: false,
+          data: null,
+          statusCode: 401,
+        };
+      }
+    } catch (error) {
+      const axiosError = error as AxiosError<Error>;
+
+      return {
+        success: false,
+        data: null,
+        statusCode: axiosError.response?.status || 0,
+      };
+    }
+  }
+
+  public async getUserLoansByLibrarian(
+    userId: number,
+  ): Promise<ClientResponse<LoanResponseDto[] | null>> {
+    try {
+      const token = Cookies.get('token');
+      if (token) {
+        this.client.defaults.headers.common['Authorization'] =
+          `Bearer ${token}`;
+        const response: AxiosResponse<LoanResponseDto[]> =
+          await this.client.get(`/loan/getAllUserLoans/${userId}`);
 
         return {
           success: true,
@@ -853,6 +889,82 @@ export class LibraryClient {
           `Bearer ${token}`;
         const response: AxiosResponse<null> = await this.client.delete(
           `/user/delete/${id}`,
+        );
+
+        return {
+          success: true,
+          data: response.data,
+          statusCode: response.status,
+        };
+      } else {
+        console.error('Token not found');
+
+        return {
+          success: false,
+          data: null,
+          statusCode: 401,
+        };
+      }
+    } catch (error) {
+      const axiosError = error as AxiosError<Error>;
+
+      return {
+        success: false,
+        data: null,
+        statusCode: axiosError.response?.status || 0,
+      };
+    }
+  }
+
+  public async getUser(
+    userId: number,
+  ): Promise<ClientResponse<UserResponseDto | null>> {
+    try {
+      const token = Cookies.get('token');
+      if (token) {
+        this.client.defaults.headers.common['Authorization'] =
+          `Bearer ${token}`;
+        const response: AxiosResponse<UserResponseDto> = await this.client.get(
+          `/user/getOne/${userId}`,
+        );
+        console.log(response.data);
+        return {
+          success: true,
+          data: response.data,
+          statusCode: response.status,
+        };
+      } else {
+        console.error('Token not found');
+
+        return {
+          success: false,
+          data: null,
+          statusCode: 401,
+        };
+      }
+    } catch (error) {
+      const axiosError = error as AxiosError<Error>;
+
+      return {
+        success: false,
+        data: null,
+        statusCode: axiosError.response?.status || 0,
+      };
+    }
+  }
+
+  public async updateUser(
+    userId: number,
+    userData: UserDto,
+  ): Promise<ClientResponse<UserResponseDto | null>> {
+    try {
+      const token = Cookies.get('token');
+      if (token) {
+        this.client.defaults.headers.common['Authorization'] =
+          `Bearer ${token}`;
+        const response: AxiosResponse<UserResponseDto> = await this.client.put(
+          `/user/edit/${userId}`,
+          userData,
         );
 
         return {

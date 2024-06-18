@@ -11,10 +11,13 @@ import MenuItem from '@mui/material/MenuItem';
 import Menu from '@mui/material/Menu';
 import Tooltip from '@mui/material/Tooltip';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import Typography from '@mui/material/Typography';
 
 const pages = ['Blog', 'About us'];
 
 function ResponsiveAppBar() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
     null,
@@ -37,6 +40,10 @@ function ResponsiveAppBar() {
 
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
+  };
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
   };
 
   return (
@@ -65,16 +72,38 @@ function ResponsiveAppBar() {
                   display: { xs: 'none', md: 'block' },
                 }}
               >
-                {page}
+                {t(page)}
               </Button>
             ))}
           </Box>
           <Box>
             <Button
               onClick={() => navigate('/login')}
+              variant="contained"
+              sx={{
+                backgroundColor: 'white',
+                color: 'blue',
+                '&:hover': { backgroundColor: 'lightgray' },
+                my: 2,
+                display: 'block',
+              }}
+            >
+              {t('Login')}
+            </Button>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
+            <Button
+              onClick={() => changeLanguage('en')}
               sx={{ my: 2, color: 'white', display: 'block' }}
             >
-              Login
+              EN
+            </Button>
+            <Typography sx={{ mx: 1, color: 'white' }}> | </Typography>
+            <Button
+              onClick={() => changeLanguage('pl')}
+              sx={{ my: 2, color: 'white', display: 'block' }}
+            >
+              PL
             </Button>
           </Box>
         </Toolbar>

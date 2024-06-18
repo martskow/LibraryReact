@@ -88,5 +88,20 @@
   "Role": "Role",
   "Email" :"E-mail",
   "First Name": "First Name",
-  "Last Name": "Last Name"
+  "Last Name": "Last Name",
+  "Loan ID": "Loan ID",
+  "Isbn": "ISBN",
+  "Loan Date": "Loan Date",
+  "Due Date": "Due Date",
+  "Loan List": "Loan List",
+  "sorted descending": "sorted descending",
+  "sorted ascending": "sorted ascending",
+  "Extend Loan": "Extend Loan",
+  "Return": "Return",
+  "Loan due date extended successfully": "Loan due date extended successfully",
+  "Failed to extend loan due date": "Failed to extend loan due date",
+  "Loan has been returned successfully": "Loan has been returned successfully",
+  "Failed to return loan": "Failed to return loan",
+  "Error extending loan due date": "Error extending loan due date",
+  "Error returning loan": "Error returning loan"
 }

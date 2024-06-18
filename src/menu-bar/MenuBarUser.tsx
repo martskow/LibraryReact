@@ -1,20 +1,21 @@
 import * as React from 'react';
-import { styled, alpha } from '@mui/material/styles';
-import AppBar from '@mui/material/AppBar';
-import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
-import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
-import Menu from '@mui/material/Menu';
-import HomeIcon from '@mui/icons-material/Home';
-import Container from '@mui/material/Container';
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
-import MenuItem from '@mui/material/MenuItem';
-import Tooltip from '@mui/material/Tooltip';
-import { FormControl } from '@mui/material';
+import {
+  AppBar,
+  Box,
+  Toolbar,
+  IconButton,
+  Typography,
+  Menu,
+  MenuItem,
+  Tooltip,
+  Avatar,
+  Button,
+  FormControl,
+} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import i18n from 'i18next';
+import HomeIcon from '@mui/icons-material/Home';
 
 const pages = ['library', 'blog', 'about_us'];
 const settings = ['profile', 'account', 'settings', 'logout'];
@@ -33,6 +34,7 @@ function ResponsiveAppBar() {
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
   };
+
   const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElUser(event.currentTarget);
   };
@@ -53,6 +55,10 @@ function ResponsiveAppBar() {
     setLibraryMenuOpen(false);
   };
 
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
+
   const handleUserMenuItemClick = (setting: string) => {
     handleCloseUserMenu();
     if (setting === 'logout') {
@@ -68,7 +74,7 @@ function ResponsiveAppBar() {
 
   return (
     <AppBar position="static">
-      <Container maxWidth="xl">
+      <Box>
         <Toolbar disableGutters>
           <Box>
             <IconButton
@@ -133,6 +139,21 @@ function ResponsiveAppBar() {
               </Box>
             ))}
           </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
+            <Button
+              onClick={() => changeLanguage('en')}
+              sx={{ my: 2, color: 'white', display: 'block' }}
+            >
+              EN
+            </Button>
+            <Typography sx={{ mx: 1, color: 'white' }}> | </Typography>
+            <Button
+              onClick={() => changeLanguage('pl')}
+              sx={{ my: 2, color: 'white', display: 'block' }}
+            >
+              PL
+            </Button>
+          </Box>
           <Box>
             <Tooltip title={t('open_settings')}>
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
@@ -165,7 +186,7 @@ function ResponsiveAppBar() {
             </Menu>
           </Box>
         </Toolbar>
-      </Container>
+      </Box>
     </AppBar>
   );
 }

@@ -16,11 +16,14 @@ import SearchIcon from '@mui/icons-material/Search';
 import Tooltip from '@mui/material/Tooltip';
 import { FormControl } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import i18n from 'i18next';
 
 const pages = ['Library', 'Blog', 'About us'];
 const settings = ['Profile', 'Account', 'Settings', 'Logout'];
 
 function ResponsiveAppBar() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
     null,
@@ -42,6 +45,10 @@ function ResponsiveAppBar() {
 
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
+  };
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
   };
 
   const handleUserMenuItemClick = (setting: string) => {
@@ -102,7 +109,7 @@ function ResponsiveAppBar() {
                       }}
                       onClick={handleOpenNavMenu}
                     >
-                      {page}
+                      {t(page)}
                     </Button>
                     <Menu
                       id="library-menu"
@@ -111,14 +118,14 @@ function ResponsiveAppBar() {
                       open={Boolean(anchorElNav)}
                       onClose={handleCloseNavMenu}
                     >
-                      <MenuItem onClick={() => navigate('/loans')}>
-                        Loans
+                      <MenuItem onClick={() => navigate('/loansAdmin')}>
+                        {t('Loans')}
                       </MenuItem>
                       <MenuItem onClick={() => navigate('/booksList')}>
-                        Books
+                        {t('Books')}
                       </MenuItem>
                       <MenuItem onClick={() => navigate('/users')}>
-                        Users
+                        {t('Users')}
                       </MenuItem>
                     </Menu>
                   </FormControl>
@@ -132,14 +139,29 @@ function ResponsiveAppBar() {
                       display: { xs: 'none', md: 'block' },
                     }}
                   >
-                    {page}
+                    {t(page)}
                   </Button>
                 )}
               </Box>
             ))}
           </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
+            <Button
+              onClick={() => changeLanguage('en')}
+              sx={{ my: 2, color: 'white', display: 'block' }}
+            >
+              EN
+            </Button>
+            <Typography sx={{ mx: 1, color: 'white' }}> | </Typography>
+            <Button
+              onClick={() => changeLanguage('pl')}
+              sx={{ my: 2, color: 'white', display: 'block' }}
+            >
+              PL
+            </Button>
+          </Box>
           <Box>
-            <Tooltip title="Open settings">
+            <Tooltip title={t('Open settings')}>
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                 <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
               </IconButton>
@@ -164,7 +186,7 @@ function ResponsiveAppBar() {
                   key={setting}
                   onClick={() => handleUserMenuItemClick(setting)}
                 >
-                  <Typography textAlign="center">{setting}</Typography>
+                  <Typography textAlign="center">{t(setting)}</Typography>
                 </MenuItem>
               ))}
             </Menu>

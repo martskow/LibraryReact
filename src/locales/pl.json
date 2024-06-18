@@ -88,5 +88,21 @@
   "Role": "Rola",
   "Email" :"E-mail",
   "First Name": "Imię",
-  "Last Name": "Nazwisko"
+  "Last Name": "Nazwisko",
+  "Loan ID": "ID wypożyczenia",
+  "Isbn": "ISBN",
+  "Loan Date": "Data wypożyczenia",
+  "Loan date": "Data wypożyczenia",
+  "Due Date": "Termin",
+  "Loan List": "Lista wypożyczeń",
+  "sorted descending": "sortowanie malejące",
+  "sorted ascending": "sortowanie rosnące",
+  "Extend Loan": "Wydłuż termin",
+  "Return": "Zwróć",
+  "Loan due date extended successfully": "Wydłużenie terminu wypożyczenia powiodło się",
+  "Failed to extend loan due date": "Wydłużenie terminu wypożyczenia nie powiodło się",
+  "Loan has been returned successfully": "Zwrot wypożyczenia zakończył się pomyślnie",
+  "Failed to return loan": "Zwrot wypożyczenia nie zakończył się pomyślnie",
+  "Error extending loan due date": "Błąd przy wydłużaniu terminu wypozyczenia",
+  "Error returning loan": "Błąd przy zwrocie wypozyczenia"
 }

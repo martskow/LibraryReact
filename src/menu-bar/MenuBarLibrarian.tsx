@@ -17,6 +17,7 @@ import Tooltip from '@mui/material/Tooltip';
 import { FormControl } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import i18n from 'i18next';
 
 const pages = ['Library', 'Blog', 'About us'];
 const settings = ['Profile', 'Account', 'Settings', 'Logout'];
@@ -44,6 +45,10 @@ function ResponsiveAppBar() {
 
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
+  };
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
   };
 
   const handleUserMenuItemClick = (setting: string) => {
@@ -119,7 +124,7 @@ function ResponsiveAppBar() {
                       <MenuItem onClick={() => navigate('/booksListLibrarian')}>
                         {t('Books')}
                       </MenuItem>
-                      <MenuItem onClick={() => navigate('/users')}>
+                      <MenuItem onClick={() => navigate('/usersLibrarian')}>
                         {t('Users')}
                       </MenuItem>
                       <MenuItem
@@ -144,6 +149,21 @@ function ResponsiveAppBar() {
                 )}
               </Box>
             ))}
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
+            <Button
+              onClick={() => changeLanguage('en')}
+              sx={{ my: 2, color: 'white', display: 'block' }}
+            >
+              EN
+            </Button>
+            <Typography sx={{ mx: 1, color: 'white' }}> | </Typography>
+            <Button
+              onClick={() => changeLanguage('pl')}
+              sx={{ my: 2, color: 'white', display: 'block' }}
+            >
+              PL
+            </Button>
           </Box>
           <Box>
             <Tooltip title={t('Open settings')}>
