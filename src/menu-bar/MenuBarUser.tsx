@@ -1,24 +1,26 @@
 import * as React from 'react';
-import {
-  AppBar,
-  Box,
-  Toolbar,
-  IconButton,
-  Typography,
-  Menu,
-  MenuItem,
-  Tooltip,
-  Avatar,
-  Button,
-  FormControl,
-} from '@mui/material';
+import { styled, alpha } from '@mui/material/styles';
+import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import Toolbar from '@mui/material/Toolbar';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import Menu from '@mui/material/Menu';
+import HomeIcon from '@mui/icons-material/Home';
+import Container from '@mui/material/Container';
+import Avatar from '@mui/material/Avatar';
+import Button from '@mui/material/Button';
+import MenuItem from '@mui/material/MenuItem';
+import InputBase from '@mui/material/InputBase';
+import SearchIcon from '@mui/icons-material/Search';
+import Tooltip from '@mui/material/Tooltip';
+import { FormControl } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import i18n from 'i18next';
-import HomeIcon from '@mui/icons-material/Home';
 
-const pages = ['library', 'blog', 'about_us'];
-const settings = ['profile', 'account', 'settings', 'logout'];
+const pages = ['Library', 'Blog', 'About us'];
+const settings = ['Profile', 'Account', 'Settings', 'Logout'];
 
 function ResponsiveAppBar() {
   const { t } = useTranslation();
@@ -29,12 +31,10 @@ function ResponsiveAppBar() {
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
     null,
   );
-  const [libraryMenuOpen, setLibraryMenuOpen] = React.useState(false);
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
   };
-
   const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElUser(event.currentTarget);
   };
@@ -47,41 +47,49 @@ function ResponsiveAppBar() {
     setAnchorElUser(null);
   };
 
-  const handleLibraryMenuOpen = () => {
-    setLibraryMenuOpen(true);
-  };
-
-  const handleLibraryMenuClose = () => {
-    setLibraryMenuOpen(false);
-  };
-
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
   };
 
   const handleUserMenuItemClick = (setting: string) => {
     handleCloseUserMenu();
-    if (setting === 'logout') {
+    if (setting === t('Logout')) {
       navigate('/startPage');
-    } else if (setting === 'profile') {
+    } else if (setting === t('Profile')) {
       navigate('/profile');
-    } else if (setting === 'account') {
+    } else if (setting === t('Account')) {
       navigate('/account');
-    } else if (setting === 'settings') {
+    } else if (setting === t('Settings')) {
       navigate('/settings');
     }
   };
 
+  const StyledInputBase = styled(InputBase)(({ theme }) => ({
+    color: 'inherit',
+    width: '100%',
+    '& .MuiInputBase-input': {
+      padding: theme.spacing(1, 1, 1, 0),
+      paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+      transition: theme.transitions.create('width'),
+      [theme.breakpoints.up('sm')]: {
+        width: '12ch',
+        '&:focus': {
+          width: '20ch',
+        },
+      },
+    },
+  }));
+
   return (
     <AppBar position="static">
-      <Box>
+      <Container maxWidth="xl">
         <Toolbar disableGutters>
           <Box>
             <IconButton
               size="large"
               edge="start"
               color="inherit"
-              aria-label={t('home')}
+              aria-label="open drawer"
               sx={{ mr: 2 }}
               onClick={() => navigate('/home')}
             >
@@ -91,7 +99,7 @@ function ResponsiveAppBar() {
           <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
             {pages.map((page) => (
               <Box key={page}>
-                {page === 'library' ? (
+                {page === 'Library' ? (
                   <FormControl>
                     <Button
                       sx={{
@@ -110,23 +118,18 @@ function ResponsiveAppBar() {
                       open={Boolean(anchorElNav)}
                       onClose={handleCloseNavMenu}
                     >
-                      <MenuItem onClick={() => navigate('/borrow')}>
-                        {t('borrow')}
+                      <MenuItem onClick={() => navigate('/reviews')}>
+                        {t('Reviews')}
                       </MenuItem>
                       <MenuItem onClick={() => navigate('/booksList')}>
-                        {t('books')}
-                      </MenuItem>
-                      <MenuItem onClick={() => navigate('/reviews')}>
-                        {t('reviews')}
+                        {t('Books')}
                       </MenuItem>
                     </Menu>
                   </FormControl>
                 ) : (
                   <Button
                     key={page}
-                    onClick={() =>
-                      navigate(`/${page.toLowerCase().replace(' ', '')}`)
-                    }
+                    onClick={handleCloseNavMenu}
                     sx={{
                       my: 2,
                       color: 'white',
@@ -155,7 +158,7 @@ function ResponsiveAppBar() {
             </Button>
           </Box>
           <Box>
-            <Tooltip title={t('open_settings')}>
+            <Tooltip title={t('Open settings')}>
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                 <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
               </IconButton>
@@ -178,7 +181,7 @@ function ResponsiveAppBar() {
               {settings.map((setting) => (
                 <MenuItem
                   key={setting}
-                  onClick={() => handleUserMenuItemClick(setting)}
+                  onClick={() => handleUserMenuItemClick(t(setting))}
                 >
                   <Typography textAlign="center">{t(setting)}</Typography>
                 </MenuItem>
@@ -186,7 +189,7 @@ function ResponsiveAppBar() {
             </Menu>
           </Box>
         </Toolbar>
-      </Box>
+      </Container>
     </AppBar>
   );
 }

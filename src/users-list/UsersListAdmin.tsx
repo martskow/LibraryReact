@@ -248,6 +248,7 @@ const UserList = () => {
                         sx={{ cursor: 'pointer' }}
                       >
                         <TableCell
+                          align="center"
                           component="th"
                           id={labelId}
                           scope="row"

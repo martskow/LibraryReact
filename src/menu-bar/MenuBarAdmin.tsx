@@ -121,7 +121,7 @@ function ResponsiveAppBar() {
                       <MenuItem onClick={() => navigate('/loansAdmin')}>
                         {t('Loans')}
                       </MenuItem>
-                      <MenuItem onClick={() => navigate('/booksList')}>
+                      <MenuItem onClick={() => navigate('/booksListAdmin')}>
                         {t('Books')}
                       </MenuItem>
                       <MenuItem onClick={() => navigate('/users')}>

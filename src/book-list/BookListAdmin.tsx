@@ -229,7 +229,7 @@ const BookList = () => {
   const [books, setBooks] = useState<BookResponseDto[]>([]);
   const libraryClient = new LibraryClient();
 
-  const checkUserRole = async () => {
+  /*const checkUserRole = async () => {
     const token = Cookies.get('token');
     if (!token) {
       navigate('/login');
@@ -246,7 +246,7 @@ const BookList = () => {
       navigate('/login');
     }
   };
-  checkUserRole();
+  checkUserRole();*/
 
   useEffect(() => {
     const libraryClient = new LibraryClient();
@@ -269,7 +269,7 @@ const BookList = () => {
       const userRoleResponse = await libraryClient.getUserRole();
       if (userRoleResponse.statusCode === 200 && userRoleResponse.data) {
         const role = userRoleResponse.data;
-        if (role !== 'ROLE_USER') {
+        if (role !== 'ROLE_ADMIN') {
           navigate('/login');
         }
       } else {

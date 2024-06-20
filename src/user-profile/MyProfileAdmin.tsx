@@ -8,7 +8,7 @@ import {
   Alert,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import MenuBar from '../menu-bar/MenuBarUser';
+import MenuBar from '../menu-bar/MenuBarAdmin';
 import { LibraryClient } from '../api/library-client';
 import { UserDto, UserResponseDto } from '../api/dto/user.dto';
 
